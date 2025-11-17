@@ -189,9 +189,10 @@
     }
 
     .game-content.celebration {
-      background: black;
-      padding: 0;
-      border: none;
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 30px;
+      border: 2px solid #e9ecef;
     }
     
     #content-wrapper {
@@ -216,10 +217,10 @@
     }
 
     #video-section.celebration {
-      background: black;
-      border-radius: 0;
-      padding: 0;
-      box-shadow: none;
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
     
     #prompt-video {
@@ -229,10 +230,9 @@
     }
 
     #prompt-video.celebration {
-      width: 100%;
-      height: 400px;
-      border-radius: 0;
-      object-fit: contain;
+      width: 500px;
+      display: block;
+      border-radius: 8px;
     }
     
     #noun-img-container {
@@ -432,19 +432,15 @@
 </head>
 <body>
   <div class="app-wrapper">
-    <!-- Header -->
     <div class="app-header">
       <h1>🎮 Noun Game</h1>
       <p>Drag the correct audio card to match the image</p>
     </div>
 
-    <!-- Score Section with Progress and Points -->
     <div id="score-header"></div>
 
     <div id="game-container">
-      <!-- Game Content -->
       <div class="game-content">
-        <!-- Video with overlaid image -->
         <div id="content-wrapper">
           <div id="video-section">
             <video id="prompt-video"></video>
@@ -455,18 +451,15 @@
         </div>
       </div>
 
-      <!-- Controls -->
       <div class="controls">
         <button class="btn-replay" onclick="playPromptVideo()">🔊 Replay Video</button>
       </div>
       
-      <!-- Audio Cards -->
       <div id="audio-cards"></div>
     </div>
   </div>
 
   <script>
-    // Nouns array
     const nouns = [
       { name: 'butterfly', img: 'img/Butterfly.png', audio: 'audio/butterfly.mp3' },
       { name: 'duck', img: 'img/duck.png', audio: 'audio/duck.mp3' },
@@ -480,7 +473,6 @@
       { name: 'bird', img: 'img/bird.png', audio: 'audio/bird.mp3' }
     ];
 
-    // Video shuffle array
     const whatisthisVideos = [
       'vid/whatisthis.mp4',
       'vid/whatisthis1.mp4',
@@ -489,9 +481,8 @@
     
     let videoQueue = [];
     let lastVideo = null;
-    
-    const streakLength = 1;
-    const pointsGoal = 1;
+    const streakLength = 5;
+    const pointsGoal = 3;
     let streak = 0;
     let totalPoints = 0;
     let scoreMarkers = [];
@@ -514,7 +505,6 @@
           [videoQueue[0], videoQueue[1]] = [videoQueue[1], videoQueue[0]];
         }
       }
-      
       lastVideo = videoQueue[0];
       return videoQueue.shift();
     }
@@ -530,12 +520,10 @@
         header.appendChild(div);
         scoreMarkers.push(div);
       }
-      
       const pointsDiv = document.createElement('div');
       pointsDiv.className = 'points-display';
       pointsDiv.innerHTML = `<div class="points-label">Points</div><div class="points-value" id="points-counter">0</div>`;
       header.appendChild(pointsDiv);
-      
       const pointsCounter = document.getElementById('points-counter');
       pointsCounter.textContent = totalPoints;
     }
@@ -545,15 +533,12 @@
       const nounRect = nounImg.getBoundingClientRect();
       const startX = nounRect.left + nounRect.width / 2;
       const startY = nounRect.top + nounRect.height / 2;
-      
       const targetMarker = scoreMarkers[targetMarkerIndex];
       const targetRect = targetMarker.getBoundingClientRect();
       const endX = targetRect.left + targetRect.width / 2;
       const endY = targetRect.top + targetRect.height / 2;
-      
       const tx = endX - startX;
       const ty = endY - startY;
-      
       const flyingStar = document.createElement('div');
       flyingStar.className = 'flying-star';
       flyingStar.textContent = '⭐';
@@ -562,7 +547,6 @@
       flyingStar.style.setProperty('--tx', tx + 'px');
       flyingStar.style.setProperty('--ty', ty + 'px');
       document.body.appendChild(flyingStar);
-      
       for (let i = 0; i < 8; i++) {
         setTimeout(() => {
           const sparkle = document.createElement('div');
@@ -572,13 +556,10 @@
           sparkle.style.left = (startX + tx * progress) + 'px';
           sparkle.style.top = (startY + ty * progress) + 'px';
           document.body.appendChild(sparkle);
-          
           setTimeout(() => sparkle.remove(), 600);
         }, i * 75);
       }
-      
       setTimeout(() => flyingStar.remove(), 1200);
-      
       setTimeout(() => {
         targetMarker.innerHTML = '<img src="img/star.png" width="40">';
       }, 1100);
@@ -602,95 +583,94 @@
       }
     }
 
+    function resetGame() {
+      gameWon = false;
+      celebrationInProgress = false;
+      totalPoints = 0;
+      streak = 0;
+      document.querySelector('.app-header').classList.remove('hidden');
+      document.querySelector('#score-header').classList.remove('hidden');
+      document.querySelector('.controls').classList.remove('hidden');
+      document.querySelector('#audio-cards').classList.remove('hidden');
+      document.querySelector('#noun-img-container').classList.remove('hidden');
+      document.querySelector('.game-content').classList.remove('celebration');
+      document.querySelector('#video-section').classList.remove('celebration');
+      document.querySelector('#prompt-video').classList.remove('celebration');
+      const video = document.getElementById('prompt-video');
+      video.pause();
+      video.src = '';
+      video.currentTime = 0;
+      video.onended = null;
+      video.dataset.isCelebration = '';
+      document.querySelectorAll('.audio-card button').forEach(btn => {
+        btn.disabled = false;
+        btn.style.cursor = 'pointer';
+      });
+      setupScoreHeader();
+      loadNewRound();
+    }
+
     function playCelebration() {
-      // DOUBLE LOCK - Set both flags immediately
       gameWon = true;
       celebrationInProgress = true;
-      
-      // STOP CURRENT VIDEO IMMEDIATELY
       const currentVideo = document.getElementById('prompt-video');
       currentVideo.pause();
       currentVideo.src = '';
       currentVideo.currentTime = 0;
-      
-      // STOP ALL OTHER VIDEO/AUDIO ELEMENTS
       document.querySelectorAll('video, audio').forEach(media => {
         media.pause();
         media.src = '';
         media.currentTime = 0;
       });
-      
-      // Hide all game elements
       document.querySelector('.app-header').classList.add('hidden');
       document.querySelector('#score-header').classList.add('hidden');
       document.querySelector('.controls').classList.add('hidden');
       document.querySelector('#audio-cards').classList.add('hidden');
       document.querySelector('#noun-img-container').classList.add('hidden');
-      
-      // Transform for celebration
       document.querySelector('.game-content').classList.add('celebration');
       document.querySelector('#video-section').classList.add('celebration');
       document.querySelector('#prompt-video').classList.add('celebration');
-      
-      // Remove ALL event listeners from game elements
       const nounImg = document.getElementById('noun-img');
       nounImg.ondragover = null;
       nounImg.ondrop = null;
-      
-      // Disable all audio buttons
       document.querySelectorAll('.audio-card button').forEach(btn => {
         btn.disabled = true;
         btn.style.cursor = 'not-allowed';
       });
-      
-      // WAIT LONGER TO ENSURE CLEAN STATE
       setTimeout(() => {
         const video = document.getElementById('prompt-video');
-        
-        // SET CELEBRATION FLAG BEFORE LOADING VIDEO
         video.dataset.isCelebration = 'true';
-        
-        // CLEAR ALL LISTENERS
         video.onplay = null;
         video.onpause = null;
         video.onended = null;
         video.onerror = null;
-        
-        // SET CELEBRATION VIDEO
         video.src = 'vid/greatjob.mp4';
         video.loop = false;
-        
-        // ADD CELEBRATION END LISTENER
         video.addEventListener('ended', function celebrationEnd() {
-          // Only redirect if this is the celebration video
           if (video.dataset.isCelebration === 'true') {
             video.removeEventListener('ended', celebrationEnd);
             video.pause();
             video.src = '';
-            window.location.href = 'menu.html';
+            setTimeout(() => {
+              resetGame();
+            }, 2000);
           }
         }, { once: true });
-        
         video.play().catch(err => console.error('Celebration play error:', err));
       }, 300);
     }
 
     function updateScoreHeader(isCorrect) {
-      // BLOCK ALL IF GAME OVER
       if (gameWon || celebrationInProgress) return;
-      
       if (isCorrect) {
         streak++;
         animateStarToProgressBar(streak - 1);
-        
         if (streak === streakLength) {
           totalPoints++;
           updatePointsDisplay();
-          
           if (totalPoints === pointsGoal) {
-            // TRIGGER CELEBRATION IMMEDIATELY
             playCelebration();
-            return; // EXIT FUNCTION
+            return;
           } else {
             streak = 0;
             setTimeout(() => {
@@ -717,13 +697,10 @@
     }
 
     function loadNewRound() {
-      // BLOCK IF GAME OVER
       if (gameWon || celebrationInProgress) return;
-      
       const noun = nouns[Math.floor(Math.random() * nouns.length)];
       document.getElementById('noun-img').src = noun.img;
       document.getElementById('noun-img').setAttribute('data-noun', noun.name);
-      
       const video = document.getElementById('prompt-video');
       video.src = getNextWhatisthisVideo();
       video.loop = false;
@@ -750,7 +727,6 @@
         div.innerHTML = `<span>${card.name}</span><button onclick="event.stopPropagation(); playAudio('${card.audio}')">🔈</button>`;
         
         div.addEventListener('dragstart', function(e){
-          // BLOCK DRAG IF GAME OVER
           if (gameWon || celebrationInProgress) {
             e.preventDefault();
             return;
@@ -770,9 +746,7 @@
       nounImg.ondragover = e => e.preventDefault();
       nounImg.ondrop = function(e){
         e.preventDefault();
-        // BLOCK DROP IF GAME OVER
         if (gameWon || celebrationInProgress) return;
-        
         const correct = (e.dataTransfer.getData('text/plain') === 'true');
         if (correct) {
           playFeedback(true);
@@ -784,34 +758,25 @@
     }
 
     function playAudio(audioPath) {
-      // BLOCK AUDIO IF GAME OVER
       if (gameWon || celebrationInProgress) return;
-      
       const audio = new Audio(audioPath);
-      audio.play();
+      audio.play().catch(err => console.log('Audio play error:', err));
     }
 
     function playPromptVideo() {
-      // BLOCK REPLAY IF GAME OVER
       if (gameWon || celebrationInProgress) return;
-      
       const vid = document.getElementById('prompt-video');
       vid.currentTime = 0;
       vid.play();
     }
 
     function playFeedback(isCorrect) {
-      // BLOCK FEEDBACK IF GAME OVER
       if (gameWon || celebrationInProgress) return;
-      
       const promptVideo = document.getElementById('prompt-video');
       promptVideo.src = isCorrect ? 'vid/thatscorrect.mp4' : 'vid/betterluck.mp4';
       promptVideo.loop = false;
-      
       promptVideo.onended = null;
-      
       promptVideo.onended = function() {
-        // DOUBLE CHECK BEFORE LOADING NEW ROUND
         if (!gameWon && !celebrationInProgress) {
           promptVideo.onended = null;
           if (isCorrect) {
@@ -820,7 +785,6 @@
           setTimeout(loadNewRound, 500);
         }
       };
-      
       promptVideo.play().catch(err => console.log('Playback error:', err));
     }
 
