@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Noun Game</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app-wrapper {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 900px;
+      width: 100%;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 3px solid #667eea;
+      padding-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .app-header h1 {
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .app-header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .app-header.hidden,
+    #score-header.hidden,
+    .controls.hidden,
+    #audio-cards.hidden {
+      display: none;
+    }
+
+    #score-header { 
+      display: flex; 
+      gap: 15px;
+      align-items: center;
+      justify-content: center;
+      margin: 20px auto;
+      flex-wrap: wrap;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .score-marker { 
+      width: 70px; 
+      height: 70px;
+      border: 4px solid #FF6B35;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%);
+      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 5;
+      overflow: hidden;
+    }
+
+    .score-marker img {
+      width: 45px;
+      height: 45px;
+    }
+
+    @keyframes starSpin {
+      0% { transform: scale(0) rotate(0deg); opacity: 0; }
+      10% { transform: scale(1) rotate(0deg); opacity: 1; }
+      100% { transform: scale(1) rotate(360deg); opacity: 1; }
+    }
+
+    @keyframes starFly {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--tx), var(--ty)) scale(0.5);
+        opacity: 0;
+      }
+    }
+
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
+    .flying-star {
+      position: fixed;
+      pointer-events: none;
+      z-index: 1000;
+      font-size: 48px;
+      animation: starSpin 0.4s ease-out, starFly 0.8s ease-in-out forwards;
+      animation-delay: 0s, 0.4s;
+    }
+
+    .sparkle {
+      position: fixed;
+      pointer-events: none;
+      font-size: 24px;
+      animation: sparkle 0.6s ease-in-out forwards;
+      z-index: 999;
+    }
+
+    .points-display {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+      text-align: center;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: 10px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .points-label {
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .points-value {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .points-value.pulse {
+      animation: pointPulse 0.4s ease-out;
+    }
+
+    @keyframes pointPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    
+    #game-container { 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      flex-direction: column;
+      gap: 15px;
+      flex: 1;
+      min-height: 0;
+    }
+    
+    .game-content {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 30px;
+      border: 2px solid #e9ecef;
+      flex-shrink: 0;
+    }
+
+    .game-content.celebration {
+      background: black;
+      padding: 0;
+      border: none;
+    }
+    
+    #content-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      position: relative;
+      width: 100%;
+    }
+    
+    #video-section {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    #video-section.celebration {
+      background: black;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+    
+    #prompt-video {
+      width: 500px;
+      display: block;
+      border-radius: 8px;
+    }
+
+    #prompt-video.celebration {
+      width: 100%;
+      height: 400px;
+      border-radius: 0;
+      object-fit: contain;
+    }
+    
+    #noun-img-container {
+      position: absolute;
+      right: 20px;
+      top: 35%;
+      transform: translateY(-50%);
+      z-index: 10;
+    }
+
+    #noun-img-container.hidden {
+      display: none;
+    }
+    
+    .noun-img { 
+      width: 175px;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+      padding: 12px;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
+      border-radius: 20px;
+      border: 4px solid #FF6B35;
+      box-shadow: 
+        0 0 0 4px #FFD700,
+        0 8px 16px rgba(0,0,0,0.3),
+        inset 0 2px 4px rgba(255,255,255,0.5);
+    }
+    
+    #center { 
+      display: none;
+    }
+    
+    #left, #right { 
+      margin: 20px; 
+    }
+
+    .controls {
+      text-align: center;
+      flex-shrink: 0;
+    }
+    
+    .audio-card { 
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 12px; 
+      padding: 24px 32px; 
+      border-radius: 16px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+      cursor: grab; 
+      border: 4px solid #5a67d8;
+      transition: all 0.3s ease;
+      font-weight: 700;
+      color: white;
+      font-size: 18px;
+      min-width: 200px;
+      text-align: center;
+      flex-shrink: 1;
+    }
+
+    .audio-card span {
+      display: block;
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .audio-card button {
+      background: rgba(255, 255, 255, 0.25);
+      border: 2px solid white;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .audio-card button:hover {
+      background: rgba(255, 255, 255, 0.4);
+      transform: scale(1.1);
+    }
+
+    .audio-card:hover {
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+      transform: translateY(-5px);
+      border-color: white;
+    }
+    
+    .audio-card.dragging { 
+      opacity: 0.7;
+      transform: scale(1.08) rotate(2deg);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+    }
+    
+    #audio-cards { 
+      text-align: center; 
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      flex-shrink: 1;
+    }
+
+    .btn-replay {
+      padding: 14px 40px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 700;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+    
+    .btn-replay:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-replay:active {
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+      .app-wrapper {
+        padding: 20px;
+      }
+
+      #prompt-video {
+        width: 100%;
+        max-width: 400px;
+      }
+
+      #noun-img-container {
+        right: 10px;
+      }
+
+      .app-header h1 {
+        font-size: 24px;
+      }
+
+      .score-marker {
+        width: 60px;
+        height: 60px;
+      }
+
+      #score-header {
+        gap: 10px;
+        margin: 15px auto;
+      }
+
+      .points-display {
+        padding: 12px 16px;
+        margin-left: 5px;
+      }
+
+      .points-label {
+        font-size: 10px;
+        margin-bottom: 2px;
+      }
+
+      .points-value {
+        font-size: 28px;
+      }
+
+      .audio-card {
+        min-width: 160px;
+        padding: 18px 24px;
+        font-size: 16px;
+      }
+
+      .audio-card button {
+        width: 42px;
+        height: 42px;
+        font-size: 20px;
+      }
+
+      #game-container {
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Header -->
+    <div class="app-header">
+      <h1>🎮 Noun Game</h1>
+      <p>Drag the correct audio card to match the image</p>
+    </div>
+
+    <!-- Score Section with Progress and Points -->
+    <div id="score-header"></div>
+
+    <div id="game-container">
+      <!-- Game Content -->
+      <div class="game-content">
+        <!-- Video with overlaid image -->
+        <div id="content-wrapper">
+          <div id="video-section">
+            <video id="prompt-video"></video>
+            <div id="noun-img-container">
+              <img id="noun-img" class="noun-img" src="" alt="noun">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <button class="btn-replay" onclick="playPromptVideo()">🔊 Replay Video</button>
+      </div>
+      
+      <!-- Audio Cards -->
+      <div id="audio-cards"></div>
+    </div>
+  </div>
+
+  <script>
+    // Nouns array
+    const nouns = [
+      { name: 'butterfly', img: 'img/Butterfly.png', audio: 'audio/butterfly.mp3' },
+      { name: 'duck', img: 'img/duck.png', audio: 'audio/duck.mp3' },
+      { name: 'turtle', img: 'img/turtle.png', audio: 'audio/turtle.mp3' },
+      { name: 'frog', img: 'img/frog.png', audio: 'audio/frog.mp3' },
+      { name: 'dolphin', img: 'img/dolphin.png', audio: 'audio/dolphin.mp3' },
+      { name: 'fish', img: 'img/fish.png', audio: 'audio/fish.mp3' },
+      { name: 'bee', img: 'img/bee.png', audio: 'audio/bee.mp3' },
+      { name: 'plane', img: 'img/plane.png', audio: 'audio/plane.mp3' },
+      { name: 'bat', img: 'img/bat.png', audio: 'audio/bat.mp3' },
+      { name: 'bird', img: 'img/bird.png', audio: 'audio/bird.mp3' }
+    ];
+
+    // Video shuffle array
+    const whatisthisVideos = [
+      'vid/whatisthis.mp4',
+      'vid/whatisthis1.mp4',
+      'vid/whatisthis2.mp4'
+    ];
+    
+    let videoQueue = [];
+    let lastVideo = null;
+    
+    const streakLength = 1;
+    const pointsGoal = 1;
+    let streak = 0;
+    let totalPoints = 0;
+    let scoreMarkers = [];
+    let gameWon = false;
+    let celebrationInProgress = false;
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function getNextWhatisthisVideo() {
+      if (videoQueue.length <= 1) {
+        videoQueue = shuffleArray(whatisthisVideos);
+        if (videoQueue[0] === lastVideo && videoQueue.length > 1) {
+          [videoQueue[0], videoQueue[1]] = [videoQueue[1], videoQueue[0]];
+        }
+      }
+      
+      lastVideo = videoQueue[0];
+      return videoQueue.shift();
+    }
+
+    function setupScoreHeader() {
+      const header = document.getElementById('score-header');
+      header.innerHTML = '';
+      scoreMarkers = [];
+      for (let i = 0; i < streakLength; i++) {
+        const div = document.createElement('div');
+        div.className = 'score-marker';
+        div.innerHTML = '';
+        header.appendChild(div);
+        scoreMarkers.push(div);
+      }
+      
+      const pointsDiv = document.createElement('div');
+      pointsDiv.className = 'points-display';
+      pointsDiv.innerHTML = `<div class="points-label">Points</div><div class="points-value" id="points-counter">0</div>`;
+      header.appendChild(pointsDiv);
+      
+      const pointsCounter = document.getElementById('points-counter');
+      pointsCounter.textContent = totalPoints;
+    }
+
+    function animateStarToProgressBar(targetMarkerIndex) {
+      const nounImg = document.getElementById('noun-img');
+      const nounRect = nounImg.getBoundingClientRect();
+      const startX = nounRect.left + nounRect.width / 2;
+      const startY = nounRect.top + nounRect.height / 2;
+      
+      const targetMarker = scoreMarkers[targetMarkerIndex];
+      const targetRect = targetMarker.getBoundingClientRect();
+      const endX = targetRect.left + targetRect.width / 2;
+      const endY = targetRect.top + targetRect.height / 2;
+      
+      const tx = endX - startX;
+      const ty = endY - startY;
+      
+      const flyingStar = document.createElement('div');
+      flyingStar.className = 'flying-star';
+      flyingStar.textContent = '⭐';
+      flyingStar.style.left = startX + 'px';
+      flyingStar.style.top = startY + 'px';
+      flyingStar.style.setProperty('--tx', tx + 'px');
+      flyingStar.style.setProperty('--ty', ty + 'px');
+      document.body.appendChild(flyingStar);
+      
+      for (let i = 0; i < 8; i++) {
+        setTimeout(() => {
+          const sparkle = document.createElement('div');
+          sparkle.className = 'sparkle';
+          sparkle.textContent = '✨';
+          const progress = i / 8;
+          sparkle.style.left = (startX + tx * progress) + 'px';
+          sparkle.style.top = (startY + ty * progress) + 'px';
+          document.body.appendChild(sparkle);
+          
+          setTimeout(() => sparkle.remove(), 600);
+        }, i * 75);
+      }
+      
+      setTimeout(() => flyingStar.remove(), 1200);
+      
+      setTimeout(() => {
+        targetMarker.innerHTML = '<img src="img/star.png" width="40">';
+      }, 1100);
+    }
+
+    function removeLastStar() {
+      for (let i = scoreMarkers.length - 1; i >= 0; i--) {
+        const marker = scoreMarkers[i];
+        if (marker.innerHTML.trim() !== '') {
+          const img = marker.querySelector('img');
+          if (img) {
+            img.style.transition = 'opacity 0.3s ease-out';
+            img.style.opacity = '0';
+            setTimeout(() => {
+              marker.innerHTML = '';
+              img.style.opacity = '1';
+            }, 300);
+          }
+          break;
+        }
+      }
+    }
+
+    function playCelebration() {
+      // DOUBLE LOCK - Set both flags immediately
+      gameWon = true;
+      celebrationInProgress = true;
+      
+      // STOP CURRENT VIDEO IMMEDIATELY
+      const currentVideo = document.getElementById('prompt-video');
+      currentVideo.pause();
+      currentVideo.src = '';
+      currentVideo.currentTime = 0;
+      
+      // STOP ALL OTHER VIDEO/AUDIO ELEMENTS
+      document.querySelectorAll('video, audio').forEach(media => {
+        media.pause();
+        media.src = '';
+        media.currentTime = 0;
+      });
+      
+      // Hide all game elements
+      document.querySelector('.app-header').classList.add('hidden');
+      document.querySelector('#score-header').classList.add('hidden');
+      document.querySelector('.controls').classList.add('hidden');
+      document.querySelector('#audio-cards').classList.add('hidden');
+      document.querySelector('#noun-img-container').classList.add('hidden');
+      
+      // Transform for celebration
+      document.querySelector('.game-content').classList.add('celebration');
+      document.querySelector('#video-section').classList.add('celebration');
+      document.querySelector('#prompt-video').classList.add('celebration');
+      
+      // Remove ALL event listeners from game elements
+      const nounImg = document.getElementById('noun-img');
+      nounImg.ondragover = null;
+      nounImg.ondrop = null;
+      
+      // Disable all audio buttons
+      document.querySelectorAll('.audio-card button').forEach(btn => {
+        btn.disabled = true;
+        btn.style.cursor = 'not-allowed';
+      });
+      
+      // WAIT LONGER TO ENSURE CLEAN STATE
+      setTimeout(() => {
+        const video = document.getElementById('prompt-video');
+        
+        // SET CELEBRATION FLAG BEFORE LOADING VIDEO
+        video.dataset.isCelebration = 'true';
+        
+        // CLEAR ALL LISTENERS
+        video.onplay = null;
+        video.onpause = null;
+        video.onended = null;
+        video.onerror = null;
+        
+        // SET CELEBRATION VIDEO
+        video.src = 'vid/greatjob.mp4';
+        video.loop = false;
+        
+        // ADD CELEBRATION END LISTENER
+        video.addEventListener('ended', function celebrationEnd() {
+          // Only redirect if this is the celebration video
+          if (video.dataset.isCelebration === 'true') {
+            video.removeEventListener('ended', celebrationEnd);
+            video.pause();
+            video.src = '';
+            window.location.href = 'menu.html';
+          }
+        }, { once: true });
+        
+        video.play().catch(err => console.error('Celebration play error:', err));
+      }, 300);
+    }
+
+    function updateScoreHeader(isCorrect) {
+      // BLOCK ALL IF GAME OVER
+      if (gameWon || celebrationInProgress) return;
+      
+      if (isCorrect) {
+        streak++;
+        animateStarToProgressBar(streak - 1);
+        
+        if (streak === streakLength) {
+          totalPoints++;
+          updatePointsDisplay();
+          
+          if (totalPoints === pointsGoal) {
+            // TRIGGER CELEBRATION IMMEDIATELY
+            playCelebration();
+            return; // EXIT FUNCTION
+          } else {
+            streak = 0;
+            setTimeout(() => {
+              setupScoreHeader();
+            }, 1200);
+          }
+        }
+      } else {
+        if (streak > 0) {
+          removeLastStar();
+          streak--;
+        }
+      }
+    }
+
+    function updatePointsDisplay() {
+      const pointsCounter = document.getElementById('points-counter');
+      if (pointsCounter) {
+        pointsCounter.textContent = totalPoints;
+        pointsCounter.classList.remove('pulse');
+        void pointsCounter.offsetWidth;
+        pointsCounter.classList.add('pulse');
+      }
+    }
+
+    function loadNewRound() {
+      // BLOCK IF GAME OVER
+      if (gameWon || celebrationInProgress) return;
+      
+      const noun = nouns[Math.floor(Math.random() * nouns.length)];
+      document.getElementById('noun-img').src = noun.img;
+      document.getElementById('noun-img').setAttribute('data-noun', noun.name);
+      
+      const video = document.getElementById('prompt-video');
+      video.src = getNextWhatisthisVideo();
+      video.loop = false;
+      video.play();
+
+      let incorrect;
+      do {
+        incorrect = nouns[Math.floor(Math.random() * nouns.length)];
+      } while (incorrect.name === noun.name);
+
+      let audioCards = [
+        { name: noun.name, audio: noun.audio, correct: true },
+        { name: incorrect.name, audio: incorrect.audio, correct: false }
+      ];
+      audioCards.sort(() => Math.random() - 0.5);
+
+      const audioCardsDiv = document.getElementById('audio-cards');
+      audioCardsDiv.innerHTML = '';
+      audioCards.forEach((card) => {
+        const div = document.createElement('div');
+        div.className = 'audio-card';
+        div.setAttribute('draggable', true);
+        div.setAttribute('data-correct', card.correct);
+        div.innerHTML = `<span>${card.name}</span><button onclick="event.stopPropagation(); playAudio('${card.audio}')">🔈</button>`;
+        
+        div.addEventListener('dragstart', function(e){
+          // BLOCK DRAG IF GAME OVER
+          if (gameWon || celebrationInProgress) {
+            e.preventDefault();
+            return;
+          }
+          e.dataTransfer.setData('text/plain', card.correct);
+          div.classList.add('dragging');
+        });
+        
+        div.addEventListener('dragend', function(e){
+          div.classList.remove('dragging');
+        });
+        
+        audioCardsDiv.appendChild(div);
+      });
+
+      let nounImg = document.getElementById('noun-img');
+      nounImg.ondragover = e => e.preventDefault();
+      nounImg.ondrop = function(e){
+        e.preventDefault();
+        // BLOCK DROP IF GAME OVER
+        if (gameWon || celebrationInProgress) return;
+        
+        const correct = (e.dataTransfer.getData('text/plain') === 'true');
+        if (correct) {
+          playFeedback(true);
+        } else {
+          updateScoreHeader(false);
+          playFeedback(false);
+        }
+      };
+    }
+
+    function playAudio(audioPath) {
+      // BLOCK AUDIO IF GAME OVER
+      if (gameWon || celebrationInProgress) return;
+      
+      const audio = new Audio(audioPath);
+      audio.play();
+    }
+
+    function playPromptVideo() {
+      // BLOCK REPLAY IF GAME OVER
+      if (gameWon || celebrationInProgress) return;
+      
+      const vid = document.getElementById('prompt-video');
+      vid.currentTime = 0;
+      vid.play();
+    }
+
+    function playFeedback(isCorrect) {
+      // BLOCK FEEDBACK IF GAME OVER
+      if (gameWon || celebrationInProgress) return;
+      
+      const promptVideo = document.getElementById('prompt-video');
+      promptVideo.src = isCorrect ? 'vid/thatscorrect.mp4' : 'vid/betterluck.mp4';
+      promptVideo.loop = false;
+      
+      promptVideo.onended = null;
+      
+      promptVideo.onended = function() {
+        // DOUBLE CHECK BEFORE LOADING NEW ROUND
+        if (!gameWon && !celebrationInProgress) {
+          promptVideo.onended = null;
+          if (isCorrect) {
+            updateScoreHeader(true);
+          }
+          setTimeout(loadNewRound, 500);
+        }
+      };
+      
+      promptVideo.play().catch(err => console.log('Playback error:', err));
+    }
+
+    setupScoreHeader();
+    loadNewRound();
+  </script>
+</body>
+</html>
