@@ -1,56 +1,224 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Noun Game — Audio On Drag (No Overlap)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8" />
+  <title>Noun Game — Star Fly + Sparkle Animation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="color-scheme" content="only light">
   <style>
-html, body {
-  height: 100%;
-  margin: 0; padding: 0; background: #fff !important; color-scheme: only light;
-}
-body {
-  min-height: 100vh !important;
-  background: #fff !important;
-  color-scheme: only light;
-  display: flex; align-items: center; justify-content: center; width: 100vw; padding: 0;
-  overflow-x: hidden; overflow-y: auto;
-}
-.app-wrapper, #game-container, .game-content, #content-wrapper, #video-section, #audio-cards, .controls,
-.app-header, .points-display, .score-marker {
-  background: #fff !important;
-}
-#score-header { display: flex; gap: 2vw; align-items: center; justify-content: center; margin: 2vw auto 2vw auto; flex-wrap: wrap; width: 100vw; position: relative; background: #fff; }
-.score-marker { width: 9vw; height: 9vw; min-width: 26px; min-height: 26px; border: 2.5px solid #FFC100; background: #fff; border-radius: 2vw; margin: 0 1vw; display: flex; align-items: center; justify-content: center; font-size: 6vw; color: #FFC100; box-shadow: 0 3px 10px #eed37a20; transition: background 0.2s;}
-.star-empty { opacity: 0.3; filter: grayscale(1); }
-.score-marker img { width: 80%; max-width: 32px; height: auto; object-fit: contain; }
-.app-header h1 { color: #191919; }
-.app-header p { color: #424242; }
-.points-display { background: #2563EB !important; color:#fff; padding:2vw 4vw; border-radius:2vw; font-weight:700; font-size:5vw; box-shadow:0 3px 10px rgba(102,126,234,.08);}
-.points-label { font-size:3vw; text-transform:uppercase; letter-spacing:.09em;}
-.points-value { font-size:8vw; font-weight:800; line-height:1;}
-#game-container { width:100vw; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:3vw; min-height:0;}
-.game-content { width:100vw; margin:0; padding:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
-#content-wrapper { width:100vw; display:flex; flex-direction:column; align-items:center; justify-content:center;}
-#video-section { position:relative; width:100vw; max-width:100vw; height:auto; margin:0 auto 3vw auto; box-sizing:border-box; display:flex; justify-content:center; align-items:center;}
-#prompt-video { width:100vw; max-width:100vw; height:auto; display:block; background:#fff !important; border-radius:0; object-fit:contain; z-index:1; margin:0;}
-#noun-img-container { position:absolute; top:2vw; right:2vw; z-index:2; width:50vw; height:auto; display:flex; justify-content:flex-end; align-items:flex-start; pointer-events:auto;}
-.noun-img { width:100%; height:auto; max-width:100%; border-radius:4vw; padding:1vw; background:#f3f3f3 !important; border:2px solid #FF6B35; object-fit:contain; box-sizing:border-box; margin:0;}
-.controls { width:94vw; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; margin-top:2vw; margin-bottom:2vw; flex-shrink:0;}
-.btn-replay { padding:3vw 0; border-radius:2vw; border:none; width:74vw; background:#2563EB; color:#fff; font-size:6vw; font-weight:700; margin:0 auto; transition:background .3s; margin-bottom:2vw; box-shadow:0 4px 20px rgba(90,103,216,.08); letter-spacing:.05em;}
-#audio-cards { width:100vw; display:flex; justify-content:center; gap:4vw; flex-wrap:wrap; padding-bottom:2vw;}
-.audio-card { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:2vw; padding:4vw 5vw; border-radius:2vw; background:#f3f3f3 !important; box-shadow:0 4px 20px rgba(102,126,234,.04); cursor:grab; border:3px solid #2563EB; font-size:5vw; color:#222; font-weight:700; min-width:34vw; max-width:43vw; text-align:center; margin-bottom:2vw; user-select:none; -webkit-user-select:none; transition:box-shadow .2s,border-color .2s;}
-.audio-card span { font-size:4vw; text-transform:uppercase; font-family:inherit; font-weight:700; letter-spacing:.05em; margin-right:1vw;}
-.audio-card button { background:rgba(60,60,60,.08); border:2px solid #2563EB; border-radius:50%; width:9vw; height:9vw; font-size:6vw; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#2563EB; margin-left:.5vw; margin-right:.5vw; transition:background .2s;}
-.audio-card button:active { background:rgba(60,60,60,.14);}
-.audio-card:active, .audio-card.touching { box-shadow:0 8px 30px rgba(102,126,234,.07); border-color:#2563EB; opacity:0.92;}
-.audio-card.dragging { opacity:0.8; box-shadow:0 12px 40px rgba(102,126,234,.07);}
-.drag-clone { background: #f3f3f3 !important; position: fixed; pointer-events: none; z-index: 9999; opacity: 0.9; box-shadow: 0 18px 40px #aaa; transform: scale(1.08) rotate(2deg); transition: none; }
-.hide-celebration { display: none !important; }
-@media (min-width:700px) {
-  .app-header, .game-content, #content-wrapper, #video-section, #prompt-video, body, html, .app-wrapper { background: #fff !important; }
-}
+    :root{
+      --max-app-width: 1200px;
+      --gutter: 1.25rem;
+      --accent: #2563EB;
+      --accent-2: #FF6B35;
+      --card-gap: 1rem;
+      --section-vertical-gap: 1.25rem;
+    }
+
+    /* Reset / base */
+    html,body{height:100%;margin:0;padding:0;background:#fff;color:#111;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;-webkit-font-smoothing:antialiased;}
+    img,video{max-width:100%;display:block;height:auto}
+    button{font:inherit}
+
+    /* App container — center and cap width on large screens */
+    .app-wrapper{
+      width: min(var(--max-app-width), 100%);
+      margin: 0 auto;
+      padding: calc(var(--gutter) * 1.2);
+      box-sizing: border-box;
+      display:flex;
+      flex-direction:column;
+      gap:var(--section-vertical-gap);
+      min-height:100vh;
+      align-items:center;
+      background:#fff;
+    }
+
+    /* Header */
+    .app-header { text-align:center; padding: 0; width:100%; }
+    .app-header h1 { margin: 0 0 .25rem 0; font-weight:800; color:#111; font-size:clamp(1.4rem, 5.5vw, 2.3rem); }
+    .app-header p { margin: 0; color:#444; font-size:clamp(.9rem, 4vw, 1.1rem); }
+
+    /* Score row - centered above everything */
+    #score-header {
+      display:flex;
+      gap: .75rem;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+      width:100%;
+      margin-top: .25rem;
+      margin-bottom: .25rem;
+    }
+    .score-marker { width:48px; height:48px; border-radius:8px; border:2px solid var(--accent-2); display:flex; align-items:center; justify-content:center; background:#fff; box-sizing:border-box; overflow:hidden; }
+    .score-marker .star-empty{ opacity:.28; filter:grayscale(1); font-size:1.1rem; }
+    .score-marker img.small-star{ width: 100%; height: 100%; object-fit:contain; display:block; }
+
+    .points-display { background:var(--accent); color:#fff; padding: .5rem .9rem; border-radius:12px; font-weight:700; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:96px;}
+    .points-label{font-size:.6rem; text-transform:uppercase; opacity:.95}
+    .points-value{font-size:1.35rem; line-height:1; font-weight:900;}
+
+    /* Game area */
+    #game-container{ width:100%; display:flex; flex-direction:column; gap:var(--section-vertical-gap); align-items:center; }
+    .game-content{ width:100%; display:flex; justify-content:center; }
+    #content-wrapper{ width:100%; display:flex; flex-direction:column; gap:var(--section-vertical-gap); align-items:center; }
+
+    /* Video + noun wrapper */
+    #video-section{ width:100%; display:flex; flex-direction:column; align-items:center; gap:var(--section-vertical-gap); position:relative; }
+    .video-wrapper{
+      width:100%;
+      max-width: 980px;
+      position:relative;
+      display:block;
+      box-sizing:border-box;
+      padding: 0;
+      cursor:pointer;
+    }
+    #prompt-video{
+      width:100%;
+      max-height:60vh;
+      object-fit:contain;
+      border-radius:12px;
+      background:#000;
+      display:block;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    }
+
+    /* Noun card absolutely positioned over the video-wrapper so it always overlaps the video. */
+    #noun-img-container{
+      position:absolute;
+      top: 6%;
+      right: 6%;
+      z-index: 5;
+      width: 36vw;
+      max-width: 260px;
+      pointer-events: auto;
+      display:flex;
+      justify-content:flex-end;
+      align-items:flex-start;
+      transform: translateZ(0);
+      transition: all .18s ease;
+    }
+    .noun-img{
+      width:100%;
+      height:auto;
+      border-radius:14px;
+      padding:.7rem;
+      background:#f3f3f3;
+      border:3px solid var(--accent-2);
+      box-sizing:border-box;
+      box-shadow: 0 14px 36px rgba(0,0,0,0.12);
+    }
+
+    /* Controls + audio cards group that always sits BELOW the video (stacked vertically) */
+    .bottom-controls {
+      width:100%;
+      max-width: 980px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: var(--card-gap);
+      padding: .75rem 0;
+      box-sizing: border-box;
+    }
+    .controls { width:100%; display:flex; justify-content:center; align-items:center; padding:0; gap:.75rem; }
+    .btn-replay{
+      padding:.9rem 1rem;
+      border-radius:14px;
+      border:none;
+      background:var(--accent);
+      color:#fff;
+      font-weight:800;
+      font-size:1.02rem;
+      box-shadow: 0 8px 24px rgba(37,99,235,.08);
+      cursor:pointer;
+      min-width: 220px;
+      max-width: 420px;
+      width: 55%;
+    }
+
+    /* Audio cards: centered below the video, with consistent gap/padding */
+    #audio-cards{
+      width:100%;
+      display:flex;
+      justify-content:center;
+      gap: var(--card-gap);
+      flex-wrap:wrap;
+      padding: .4rem 0;
+      box-sizing:border-box;
+    }
+    .audio-card{
+      display:flex;
+      align-items:center;
+      gap:.6rem;
+      padding:.85rem 1rem;
+      border-radius:12px;
+      background:#f3f3f3;
+      cursor:grab;
+      border:3px solid var(--accent);
+      min-width:160px;
+      max-width:320px;
+      box-sizing:border-box;
+      transition: transform .12s, box-shadow .12s;
+    }
+    .audio-card:active, .audio-card.touching { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(37,99,235,.08); }
+    .audio-card span{ font-weight:800; letter-spacing:.04em; font-size:clamp(.8rem, 3.6vw, 1.02rem); text-transform:uppercase; color:#222; }
+    .audio-card button{ width:42px; height:42px; border-radius:999px; border:2px solid var(--accent); background:rgba(0,0,0,.05); color:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+
+    /* Drag clone */
+    .drag-clone{ position:fixed; pointer-events:none; z-index:9999; transform:scale(1.06); box-shadow:0 20px 40px rgba(0,0,0,.12); border-radius:12px; }
+
+    /* Flying star (large) used for animation */
+    .flying-star {
+      position: fixed;
+      z-index: 10000;
+      pointer-events: none;
+      background-image: url('img/star.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      will-change: left, top, transform, opacity;
+      transition: left 1s cubic-bezier(.22,.9,.3,1), top 1s cubic-bezier(.22,.9,.3,1), transform 1s cubic-bezier(.22,.9,.3,1), opacity 0.6s ease;
+      filter: drop-shadow(0 12px 20px rgba(0,0,0,.18));
+    }
+    /* small sparkle dots inside the flying star */
+    .flying-star .spark {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fff 0%, #ffd86b 30%, rgba(255,214,107,0) 60%);
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.4);
+      animation: spark 1100ms linear forwards;
+    }
+    @keyframes spark {
+      0% { opacity: 1; transform: scale(0.3) translateY(0) rotate(0); }
+      40% { opacity: 1; transform: scale(1.1) translateY(-18px) rotate(30deg); }
+      100% { opacity: 0; transform: scale(0.2) translateY(-36px) rotate(90deg); }
+    }
+
+    /* Desktop adjustments */
+    @media (min-width:900px){
+      .video-wrapper{ max-width: 1100px; }
+      #prompt-video{ max-height:72vh; border-radius:16px; }
+      #noun-img-container{
+        top: 10%;
+        right: 6%;
+        width: 24%;
+        max-width: 320px;
+      }
+      .bottom-controls { padding: 1rem 0; gap: 1rem; }
+      .btn-replay{ width: 320px; }
+      #audio-cards{ gap: 1rem; justify-content:flex-start; }
+      .audio-card{ min-width:180px; }
+    }
+
+    /* Small screens tiny adjustments */
+    @media (max-width:360px){
+      #noun-img-container{ width:44vw; max-width:160px; top:4%; right:4%; }
+      .btn-replay{ width:68%; min-width: 160px; }
+    }
   </style>
 </head>
 <body>
@@ -59,31 +227,38 @@ body {
       <h1>🎮 Noun Game</h1>
       <p>将音频卡拖到图片上</p>
     </div>
-    <div id="score-header"></div>
+
+    <!-- Progress (streak markers) and Points centered above everything -->
+    <div id="score-header" aria-live="polite"></div>
+
     <div id="game-container">
       <div class="game-content">
         <div id="content-wrapper">
+
           <div id="video-section">
-            <video id="prompt-video" autoplay playsinline preload="auto"></video>
-            <div id="noun-img-container">
-              <img id="noun-img" class="noun-img" src="" alt="noun">
+            <div class="video-wrapper" id="video-wrapper" aria-hidden="false" title="Click to play with sound">
+              <!-- prompt-video prepared by JS; plays after user click -->
+              <video id="prompt-video" playsinline preload="metadata"></video>
+              <div id="noun-img-container">
+                <img id="noun-img" class="noun-img" src="" alt="noun">
+              </div>
+            </div>
+
+            <div class="bottom-controls" role="group" aria-label="controls and audio cards">
+              <div class="controls">
+                <button class="btn-replay" id="start-btn">开始视频</button>
+              </div>
+              <div id="audio-cards" aria-label="audio cards"></div>
             </div>
           </div>
+
         </div>
       </div>
-      <div class="controls">
-        <button class="btn-replay" onclick="playPromptVideo()">开始视频</button>
-      </div>
-      <div id="audio-cards"></div>
     </div>
   </div>
 
   <script>
-    // ------------------------------
-    // Data & configuration
-    // ------------------------------
-    const streakLength = 5;
-    const pointsGoal = 3;
+    /* ---------- DATA ---------- */
     const nouns = [
       { name: 'butterfly', img: 'img/Butterfly.png', audio: 'audio/butterfly.mp3' },
       { name: 'duck', img: 'img/duck.png', audio: 'audio/duck.mp3' },
@@ -96,110 +271,113 @@ body {
       { name: 'bat', img: 'img/bat.png', audio: 'audio/bat.mp3' },
       { name: 'bird', img: 'img/bird.png', audio: 'audio/bird.mp3' }
     ];
-    const whatisthisVideos = [
-      'vid/whatisthis.mp4', 'vid/whatisthis1.mp4', 'vid/whatisthis2.mp4'
-    ];
+    const whatisthisVideos = ['vid/whatisthis.mp4', 'vid/whatisthis1.mp4', 'vid/whatisthis2.mp4'];
     const celebrationVideo = 'vid/greatjob.mp4';
     const feedbackVideos = ['vid/thatscorrect.mp4', 'vid/betterluck.mp4'];
+    const STAR_SRC = 'img/star.png'; // user-provided star image used for progress and animation
 
-    // ------------------------------
-    // Shared media queue & players
-    // Prevent audio/video overlap by queueing media requests.
-    // Behavior: any requested media (audio OR video) is enqueued. If nothing is playing it starts immediately.
-    // While playing, new requests wait in FIFO order. When current media ends, next item starts.
-    // Each queued item may include an onEnded callback that will be executed after the media finishes.
-    // ------------------------------
+    /* ---------- STATE / MEDIA PLAYBACK ---------- */
     const promptVideo = document.getElementById('prompt-video');
     const audioPlayer = new Audio();
     audioPlayer.preload = 'auto';
 
-    let mediaQueue = []; // {type:'audio'|'video', src: string, onEnded: function|null}
-    let currentMedia = null; // same shape as queue item while playing
+    let userInteracted = false;   // becomes true when user clicks Start or the video wrapper
+    let mediaQueue = [];          // FIFO queue of {type:'audio'|'video', src, onEnded, onStart}
+    let currentMedia = null;
+
+    function setUserInteracted() {
+      if (userInteracted) return;
+      userInteracted = true;
+      try { audioPlayer.muted = false; promptVideo.muted = false; } catch(e){}
+      if (!currentMedia) {
+        const next = mediaQueue.shift();
+        if (next) startMedia(next);
+      }
+      // optionally visually show audio enabled (left as future enhancement)
+    }
+
+    // attach gesture handlers to start button and video-wrapper
+    document.getElementById('start-btn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      setUserInteracted();
+      playPromptVideo();
+    });
+    document.getElementById('video-wrapper').addEventListener('click', function (e) {
+      setUserInteracted();
+      playPromptVideo();
+    });
 
     function enqueueMedia(item) {
-      // item: { type, src, onEnded }
-      if (!currentMedia) {
-        startMedia(item);
-      } else {
-        mediaQueue.push(item);
-      }
+      // item: { type, src, onEnded, onStart }
+      if (!currentMedia) startMedia(item);
+      else mediaQueue.push(item);
     }
 
     function startMedia(item) {
-      currentMedia = item || null;
+      currentMedia = item;
       if (!item) return;
       if (item.type === 'audio') {
-        // start audio
         audioPlayer.src = item.src;
         audioPlayer.loop = false;
-        // remove previous handlers
         audioPlayer.onended = () => {
-          if (typeof item.onEnded === 'function') {
-            try { item.onEnded(); } catch (e) { console.error(e); }
-          }
+          if (typeof item.onEnded === 'function') try { item.onEnded(); } catch(e){console.error(e);}
           currentMedia = null;
-          // next item
           const next = mediaQueue.shift();
           if (next) startMedia(next);
         };
-        audioPlayer.play().catch((err) => {
-          // If play is blocked (autoplay policy), we'll still treat it as ended so queued videos won't stall forever.
-          // But prefer to wait if it's user gesture. For simplicity, if it's blocked, call onEnded immediately.
+        // respect userInteracted for muting
+        audioPlayer.muted = !userInteracted;
+        // audio.start
+        audioPlayer.play().catch(err => {
           console.warn('Audio play blocked or failed:', err);
-          audioPlayer.onended();
+          audioPlayer.onended && audioPlayer.onended();
         });
       } else if (item.type === 'video') {
-        // start video on the promptVideo element
-        // Make sure previous handlers are removed
-        promptVideo.onended = null;
-        // set src and load
+        // set video source
         while (promptVideo.firstChild) promptVideo.removeChild(promptVideo.firstChild);
-        const src = document.createElement('source');
-        src.src = item.src;
-        src.type = 'video/mp4';
-        promptVideo.appendChild(src);
-        try { promptVideo.load(); } catch (e) {}
+        const srcEl = document.createElement('source');
+        srcEl.src = item.src;
+        srcEl.type = 'video/mp4';
+        promptVideo.appendChild(srcEl);
+        try { promptVideo.load(); } catch(e){}
         promptVideo.loop = false;
+
+        // if an onStart callback exists, call it when the video actually starts playing
+        if (typeof item.onStart === 'function') {
+          const started = () => {
+            try { item.onStart(); } catch (err) { console.error(err); }
+          };
+          promptVideo.addEventListener('playing', started, { once: true });
+        }
+
         promptVideo.onended = () => {
-          if (typeof item.onEnded === 'function') {
-            try { item.onEnded(); } catch (e) { console.error(e); }
-          }
+          if (typeof item.onEnded === 'function') try { item.onEnded(); } catch(e){console.error(e);}
           currentMedia = null;
           const next = mediaQueue.shift();
           if (next) startMedia(next);
         };
-        // attempt play; if blocked, call onended so queue continues
-        promptVideo.play().catch((err) => {
+
+        // respect userInteracted for muting
+        promptVideo.muted = !userInteracted;
+        promptVideo.play().catch(err => {
           console.warn('Video play blocked or failed:', err);
-          // If play is blocked, try to unmute if user interacted (optional), otherwise treat it as ended to avoid deadlocks.
-          if (typeof item.onEnded === 'function') {
-            try { item.onEnded(); } catch (e) { console.error(e); }
-          }
-          currentMedia = null;
-          const next = mediaQueue.shift();
-          if (next) startMedia(next);
+          // avoid deadlock: call onEnded if play failed
+          promptVideo.onended && promptVideo.onended();
         });
       }
     }
 
-    // Convenience wrappers
-    function playAudioQueued(src, onEnded = null) {
-      enqueueMedia({ type: 'audio', src, onEnded });
-    }
-    function playVideoQueued(src, onEnded = null) {
-      enqueueMedia({ type: 'video', src, onEnded });
-    }
+    function playAudioQueued(src, onEnded = null) { enqueueMedia({ type: 'audio', src, onEnded }); }
+    function playVideoQueued(src, onEnded = null, onStart = null) { enqueueMedia({ type: 'video', src, onEnded, onStart }); }
 
-    // ------------------------------
-    // Game state + UI
-    // ------------------------------
+    /* ---------- SCORING & UI ---------- */
+    const streakLength = 5;
+    const pointsGoal = 3;
     let videoQueue = [];
     let lastVideo = null;
-    let streak = 0;
-    let totalPoints = 0;
+    let streak = 0, totalPoints = 0;
     let scoreMarkers = [];
-    let gameWon = false;
-    let celebrationInProgress = false;
+    let gameWon = false, celebrationInProgress = false;
 
     function shuffleArray(array) {
       const arr = [...array];
@@ -209,16 +387,6 @@ body {
       }
       return arr;
     }
-    function getNextWhatisthisVideo() {
-      if (videoQueue.length <= 1) {
-        videoQueue = shuffleArray(whatisthisVideos.slice());
-        if (videoQueue[0] === lastVideo && videoQueue.length > 1) {
-          [videoQueue[0], videoQueue[1]] = [videoQueue[1], videoQueue[0]];
-        }
-      }
-      lastVideo = videoQueue[0];
-      return videoQueue.shift();
-    }
 
     function setupScoreHeader() {
       const header = document.getElementById('score-header');
@@ -227,6 +395,7 @@ body {
       for (let i = 0; i < streakLength; i++) {
         const div = document.createElement('div');
         div.className = 'score-marker';
+        // empty visual (small star placeholder)
         div.innerHTML = '<span class="star-empty">⭐</span>';
         header.appendChild(div);
         scoreMarkers.push(div);
@@ -236,51 +405,39 @@ body {
       pointsDiv.innerHTML = `<div class="points-label">Points</div><div class="points-value" id="points-counter">0</div>`;
       header.appendChild(pointsDiv);
       document.getElementById('points-counter').textContent = totalPoints;
-      for (let i=0; i<streak; ++i) scoreMarkers[i].innerHTML = '⭐';
+      for (let i = 0; i < streak; ++i) scoreMarkers[i].innerHTML = `<img src="${STAR_SRC}" class="small-star" alt="star">`;
     }
-    function animateStarToProgressBar(targetMarkerIndex) {
-      scoreMarkers[targetMarkerIndex].innerHTML = '⭐';
+
+    function animateStarToProgressBarIndex(targetIndex) {
+      // fallback immediate static fill (if no animation in progress)
+      if (!scoreMarkers[targetIndex]) return;
+      scoreMarkers[targetIndex].innerHTML = `<img src="${STAR_SRC}" class="small-star" alt="star">`;
     }
-    function removeLastStar() {
-      for (let i = streakLength-1; i >= 0; i--) {
-        if (scoreMarkers[i].innerHTML !== '<span class=\"star-empty\">⭐</span>' && scoreMarkers[i].innerHTML !== '') {
-          scoreMarkers[i].innerHTML = '<span class="star-empty">⭐</span>';
-          break;
-        }
-      }
-    }
+
     function resetGame() {
       gameWon = false;
       celebrationInProgress = false;
       totalPoints = 0;
       streak = 0;
-      document.querySelector('.app-header').classList.remove('hide-celebration');
-      document.getElementById('score-header').classList.remove('hide-celebration');
-      document.querySelector('.controls').classList.remove('hide-celebration');
-      document.getElementById('audio-cards').classList.remove('hide-celebration');
-      document.getElementById('noun-img-container').classList.remove('hide-celebration');
       setupScoreHeader();
       loadNewRound();
     }
+
     function playCelebration() {
       gameWon = true;
       celebrationInProgress = true;
-      document.querySelector('.app-header').classList.add('hide-celebration');
-      document.getElementById('score-header').classList.add('hide-celebration');
-      document.querySelector('.controls').classList.add('hide-celebration');
-      document.getElementById('audio-cards').classList.add('hide-celebration');
-      document.getElementById('noun-img-container').classList.add('hide-celebration');
-
-      // enqueue celebration video so it doesn't start until any current audio finishes
-      playVideoQueued(celebrationVideo, () => {
-        setTimeout(() => { resetGame(); }, 400);
-      });
+      playVideoQueued(celebrationVideo, () => { setTimeout(() => { resetGame(); }, 400); });
     }
+
     function updateScoreHeader(isCorrect) {
       if (gameWon || celebrationInProgress) return;
       if (isCorrect) {
-        animateStarToProgressBar(streak);
+        // increment streak and set visual - the animated star already landed on the marker,
+        // this ensures internal state updates and handles streak completion logic.
         streak++;
+        // ensure UI shows star (idempotent)
+        if (streak - 1 >= 0) animateStarToProgressBarIndex(streak - 1);
+
         if (streak === streakLength) {
           totalPoints++;
           updatePointsDisplay();
@@ -292,39 +449,160 @@ body {
             setTimeout(() => { setupScoreHeader(); }, 600);
           }
         }
-      } else if (streak > 0) {
-        removeLastStar();
-        streak--;
+      } else {
+        if (streak > 0) {
+          // remove last filled star
+          for (let i = scoreMarkers.length - 1; i >= 0; i--) {
+            const marker = scoreMarkers[i];
+            if (marker.innerHTML.trim() !== '') {
+              marker.innerHTML = '<span class="star-empty">⭐</span>';
+              break;
+            }
+          }
+          streak--;
+        }
       }
     }
+
     function updatePointsDisplay() {
-      const pointsCounter = document.getElementById('points-counter');
-      if (pointsCounter)
-        pointsCounter.textContent = totalPoints;
+      const el = document.getElementById('points-counter');
+      if (el) el.textContent = totalPoints;
     }
 
-    // ------------------------------
-    // Core game flow (use queued playback wrappers)
-    // ------------------------------
+    /* ---------- STAR FLY ANIMATION ---------- */
+    // create and animate a large star from the center of the noun image to the center of the
+    // target progress marker index. Add sparkles while moving.
+    function flyStarFromNounToMarker(targetIndex, doneCallback) {
+      const nounImg = document.getElementById('noun-img');
+      const marker = scoreMarkers[targetIndex];
+      if (!nounImg || !marker) {
+        if (typeof doneCallback === 'function') doneCallback();
+        return;
+      }
+
+      // compute start center (noun image center)
+      const nounRect = nounImg.getBoundingClientRect();
+      const startX = nounRect.left + nounRect.width / 2;
+      const startY = nounRect.top + nounRect.height / 2;
+
+      // compute target center (marker center)
+      const markerRect = marker.getBoundingClientRect();
+      const targetX = markerRect.left + markerRect.width / 2;
+      const targetY = markerRect.top + markerRect.height / 2;
+
+      // choose star size (big on desktop, scaled on smaller screens)
+      const maxSize = Math.min(320, Math.max(120, nounRect.width * 0.9));
+      const starSize = Math.round(maxSize);
+
+      // create flying star element
+      const star = document.createElement('div');
+      star.className = 'flying-star';
+      star.style.width = star.style.height = starSize + 'px';
+      // position it centered on noun image
+      star.style.left = (startX - starSize / 2) + 'px';
+      star.style.top = (startY - starSize / 2) + 'px';
+      star.style.transform = 'scale(1.15) rotate(0deg)';
+      star.style.opacity = '1';
+
+      // add a few sparkles inside the star (random positions)
+      const sparks = [];
+      const sparkCount = 6;
+      for (let i = 0; i < sparkCount; i++) {
+        const s = document.createElement('div');
+        s.className = 'spark';
+        // randomize initial position within star
+        const rx = Math.round((Math.random() * 60) + 10); // px offset
+        const ry = Math.round((Math.random() * 60) + 10);
+        s.style.left = rx + 'px';
+        s.style.top = ry + 'px';
+        // stagger animation delay a little
+        s.style.animationDelay = (i * 110) + 'ms';
+        star.appendChild(s);
+        sparks.push(s);
+      }
+
+      document.body.appendChild(star);
+
+      // force reflow so transition will animate
+      star.getBoundingClientRect();
+
+      // start movement to target after a tiny delay to let any video 'playing' event sync up visually
+      const moveDelay = 150; // ms
+      setTimeout(() => {
+        // move star to target center; shrink while moving
+        star.style.left = (targetX - starSize * 0.28) + 'px';
+        star.style.top = (targetY - starSize * 0.28) + 'px';
+        star.style.transform = 'scale(0.36) rotate(25deg)';
+        star.style.opacity = '0.95';
+      }, moveDelay);
+
+      // when transition finishes, remove the star and set the progress marker image
+      const cleanup = () => {
+        // fill the progress marker with the small star image
+        if (scoreMarkers[targetIndex]) scoreMarkers[targetIndex].innerHTML = `<img src="${STAR_SRC}" class="small-star" alt="star">`;
+        // small fade-out
+        star.style.transition = 'opacity .25s ease';
+        star.style.opacity = '0';
+        setTimeout(() => {
+          star.remove();
+          if (typeof doneCallback === 'function') doneCallback();
+        }, 300);
+      };
+
+      // listen for end: transitionend on left or top
+      let onTransitionEnd = (ev) => {
+        if (ev.propertyName === 'left' || ev.propertyName === 'top') {
+          star.removeEventListener('transitionend', onTransitionEnd);
+          cleanup();
+        }
+      };
+      star.addEventListener('transitionend', onTransitionEnd);
+
+      // safety timeout in case transitionend doesn't fire
+      setTimeout(() => {
+        if (document.body.contains(star)) {
+          cleanup();
+        }
+      }, 1500);
+    }
+
+    /* ---------- CORE GAME FLOW (random prompt selection per noun reload) ---------- */
+    function pickRandomPromptVideo() {
+      const idx = Math.floor(Math.random() * whatisthisVideos.length);
+      return whatisthisVideos[idx];
+    }
+
     function loadNewRound() {
       if (gameWon || celebrationInProgress) return;
       const noun = nouns[Math.floor(Math.random() * nouns.length)];
       document.getElementById('noun-img').src = noun.img;
       document.getElementById('noun-img').setAttribute('data-noun', noun.name);
 
-      // Request the next "whatisthis" video to play (queued)
-      const videoUrl = getNextWhatisthisVideo();
-      playVideoQueued(videoUrl, null); // no special onEnded logic for prompt video
+      // Randomly pick one of the "what is this?" variations for this round
+      const videoUrl = pickRandomPromptVideo();
+      lastVideo = videoUrl;
 
+      // If user has interacted already, enqueue the prompt to play. Otherwise prepare metadata/frame.
+      if (userInteracted) {
+        playVideoQueued(videoUrl, null);
+      } else {
+        promptVideo.dataset.pendingSrc = videoUrl;
+        while (promptVideo.firstChild) promptVideo.removeChild(promptVideo.firstChild);
+        const s = document.createElement('source'); s.src = videoUrl; s.type = 'video/mp4';
+        promptVideo.appendChild(s);
+        try { promptVideo.load(); } catch (e) {}
+      }
+
+      // choose incorrect card
       let incorrect;
-      do { incorrect = nouns[Math.floor(Math.random() * nouns.length)]; }
-      while (incorrect.name === noun.name);
+      do { incorrect = nouns[Math.floor(Math.random() * nouns.length)]; } while (incorrect.name === noun.name);
 
-      let audioCards = [
+      const audioCards = [
         { name: noun.name, audio: noun.audio, correct: true },
         { name: incorrect.name, audio: incorrect.audio, correct: false }
       ];
       audioCards.sort(() => Math.random() - 0.5);
+
       const audioCardsDiv = document.getElementById('audio-cards');
       audioCardsDiv.innerHTML = '';
       audioCards.forEach((card) => {
@@ -335,67 +613,79 @@ body {
         div.setAttribute('data-audio', card.audio);
         div.innerHTML = `<span>${card.name}</span>
           <button onclick="event.stopPropagation(); playAudio('${card.audio}')">🔈</button>`;
-        div.addEventListener('dragstart', function(e){
+        div.addEventListener('dragstart', function (e) {
           if (gameWon || celebrationInProgress) { e.preventDefault(); return; }
-          // Play the audio but via the queued player to avoid overlap:
+          setUserInteracted(); // treat drag as gesture
           playAudio(card.audio);
           e.dataTransfer.setData('text/plain', card.correct);
           div.classList.add('dragging');
         });
-        div.addEventListener('dragend', function(e){ div.classList.remove('dragging'); });
+        div.addEventListener('dragend', function () { div.classList.remove('dragging'); });
         audioCardsDiv.appendChild(div);
       });
+
       let nounImg = document.getElementById('noun-img');
       nounImg.ondragover = e => e.preventDefault();
-      nounImg.ondrop = function(e){
+      nounImg.ondrop = function (e) {
         e.preventDefault();
         if (gameWon || celebrationInProgress) return;
         const correct = (e.dataTransfer.getData('text/plain') === 'true');
         if (correct) playFeedback(true);
-        else { updateScoreHeader(false); playFeedback(false);}
+        else { updateScoreHeader(false); playFeedback(false); }
       };
-      for (let i = 0; i < streak; ++i) animateStarToProgressBar(i);
+
+      for (let i = 0; i < streak; ++i) animateStarToProgressBarIndex(i);
     }
 
-    // ------------------------------
-    // Public play helpers used in UI
-    // These call the queued versions to ensure no overlapping.
-    // ------------------------------
+    /* ---------- PLAY HELPERS ---------- */
     function playAudio(src, onEnded = null) {
+      setUserInteracted();
       if (gameWon || celebrationInProgress) return;
       playAudioQueued(src, onEnded);
     }
+
     function playPromptVideo() {
       if (gameWon || celebrationInProgress) return;
-      // replay the currently loaded prompt video, if any, via the queue.
-      // If promptVideo currently has a source and nothing is playing, we can start it;
-      // otherwise, enqueue it so it plays after current media.
-      // We prefer to use the src from the <source> element if present.
-      const sourceEl = promptVideo.querySelector('source');
-      const src = sourceEl ? sourceEl.src : getNextWhatisthisVideo();
+      const pending = promptVideo.dataset.pendingSrc;
+      let src = pending || pickRandomPromptVideo();
+      delete promptVideo.dataset.pendingSrc;
       playVideoQueued(src, null);
     }
+
     function playFeedback(isCorrect) {
+      // If correct, animate a big star while the "that's correct" video plays.
       if (gameWon || celebrationInProgress) return;
-      const videoSrc = isCorrect ? feedbackVideos[0] : feedbackVideos[1];
-      // Play the feedback video via the queue and run scoring logic after it ends.
-      playVideoQueued(videoSrc, function() {
-        if (isCorrect) updateScoreHeader(true);
-        setTimeout(loadNewRound, 500);
-      });
+
+      if (isCorrect) {
+        // target marker index = current streak (we will increment streak after video ends)
+        const targetIndex = streak;
+        // enqueue feedback video with an onStart that kicks off the flying-star animation
+        playVideoQueued(feedbackVideos[0], function () {
+          // after video ends, update score and load next round
+          updateScoreHeader(true);
+          setTimeout(loadNewRound, 500);
+        }, function onStart() {
+          // only start animation when the video actually starts playing
+          flyStarFromNounToMarker(targetIndex);
+        });
+      } else {
+        // wrong answer -> play "better luck" video, no star animation
+        playVideoQueued(feedbackVideos[1], function () {
+          updateScoreHeader(false);
+          setTimeout(loadNewRound, 500);
+        });
+      }
     }
 
-    // ------------------------------
-    // Touch drag support (play audio via queue to avoid overlap)
-    // ------------------------------
+    /* ---------- Touch drag support ---------- */
     let touchItem = null;
     let dragClone = null;
-    document.addEventListener('touchstart', function(e) {
+    document.addEventListener('touchstart', function (e) {
       const card = e.target.closest('.audio-card');
       if (card && !(gameWon || celebrationInProgress)) {
         touchItem = card;
         card.classList.add('touching');
-        // Play audio via queued player (it will wait for any playing video to finish)
+        setUserInteracted();
         playAudio(card.getAttribute('data-audio'));
         dragClone = card.cloneNode(true);
         dragClone.className = "audio-card drag-clone";
@@ -403,19 +693,19 @@ body {
         dragClone.style.height = card.offsetHeight + "px";
         document.body.appendChild(dragClone);
         const touch = e.touches[0];
-        dragClone.style.left = (touch.clientX - card.offsetWidth/2) + "px";
-        dragClone.style.top = (touch.clientY - card.offsetHeight/2) + "px";
+        dragClone.style.left = (touch.clientX - card.offsetWidth / 2) + "px";
+        dragClone.style.top = (touch.clientY - card.offsetHeight / 2) + "px";
       }
-    },{passive:false});
-    document.addEventListener('touchmove', function(e) {
+    }, { passive: false });
+    document.addEventListener('touchmove', function (e) {
       if (dragClone && touchItem) {
         e.preventDefault();
         const touch = e.touches[0];
-        dragClone.style.left = (touch.clientX - dragClone.offsetWidth/2) + "px";
-        dragClone.style.top = (touch.clientY - dragClone.offsetHeight/2) + "px";
+        dragClone.style.left = (touch.clientX - dragClone.offsetWidth / 2) + "px";
+        dragClone.style.top = (touch.clientY - dragClone.offsetHeight / 2) + "px";
       }
-    },{passive:false});
-    document.addEventListener('touchend', function(e) {
+    }, { passive: false });
+    document.addEventListener('touchend', function (e) {
       if (dragClone) dragClone.remove();
       dragClone = null;
       const touch = e.changedTouches[0];
@@ -428,39 +718,19 @@ body {
       ) {
         const correct = (touchItem.getAttribute('data-correct') === 'true');
         if (correct) playFeedback(true);
-        else { updateScoreHeader(false); playFeedback(false);}
+        else { updateScoreHeader(false); playFeedback(false); }
       }
       if (touchItem) touchItem.classList.remove('touching');
       touchItem = null;
-    },{passive:false});
+    }, { passive: false });
 
-    // ------------------------------
-    // Init: setup UI and pre-build video queue
-    // ------------------------------
-    function buildVideoQueue() {
-      videoQueue = shuffleArray(whatisthisVideos.slice());
-      if (videoQueue[0] === lastVideo && videoQueue.length > 1) {
-        [videoQueue[0], videoQueue[1]] = [videoQueue[1], videoQueue[0]];
-      }
-    }
+    /* ---------- INIT ---------- */
+    (function init(){
+      // start muted until user interacts; setUserInteracted() will unmute
+      audioPlayer.muted = true;
+      promptVideo.muted = true;
 
-    (function init() {
       setupScoreHeader();
-      buildVideoQueue();
-      // Optionally prefetch the feedback & celebration clips by creating a muted audio/video
-      // This is not required for the queue logic, but can help reduce perceived latency.
-      // keep it small and conservative.
-      try {
-        if (!(navigator.connection && navigator.connection.saveData)) {
-          const pre1 = document.createElement('link');
-          pre1.rel = 'preload'; pre1.as = 'video'; pre1.href = feedbackVideos[0]; pre1.type = 'video/mp4';
-          document.head.appendChild(pre1);
-          const pre2 = document.createElement('link');
-          pre2.rel = 'preload'; pre2.as = 'video'; pre2.href = feedbackVideos[1]; pre2.type = 'video/mp4';
-          document.head.appendChild(pre2);
-        }
-      } catch (e) { /* ignore */ }
-
       loadNewRound();
     })();
   </script>
