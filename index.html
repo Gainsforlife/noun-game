@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Noun Game — Always White Background</title>
+  <title>Noun Game — Visible Progress Bar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="only light">
   <style>
@@ -17,7 +17,6 @@ body {
   min-height: 100vh !important;
   background: #fff !important;
   color-scheme: only light;
-  -webkit-tap-highlight-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -38,13 +37,44 @@ body {
 .score-marker {
   background: #fff !important;
 }
-#prompt-video, .noun-img, .audio-card, .drag-clone {
-  background: #f7f7f7 !important;
+#score-header {
+  display: flex;
+  gap: 2vw;
+  align-items: center;
+  justify-content: center;
+  margin: 2vw auto 2vw auto;
+  flex-wrap: wrap;
+  width: 100vw;
+  position: relative;
+  background: #fff;
+}
+.score-marker {
+  width: 9vw;
+  height: 9vw;
+  min-width: 26px;
+  min-height: 26px;
+  border: 2.5px solid #FFC100;
+  background: #fff;
+  border-radius: 2vw;
+  margin: 0 1vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 6vw;
+  color: #FFC100;
+  box-shadow: 0 3px 10px #eed37a20;
+  transition: background 0.2s;
+}
+.star-empty {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+.score-marker img {
+  width: 80%; max-width: 32px; height: auto; object-fit: contain;
 }
 .app-header h1 { color: #191919; }
 .app-header p { color: #424242; }
-.score-marker img { width:8vw; height:8vw; object-fit:contain; }
-.points-display { background: #2563EB !important; color:#fff; padding:2vw 4vw; border-radius:2vw; font-weight:700; font-size:5vw; box-shadow:0 3px 10px rgba(102,126,234,.08); }
+.points-display { background: #2563EB !important; color:#fff; padding:2vw 4vw; border-radius:2vw; font-weight:700; font-size:5vw; box-shadow:0 3px 10px rgba(102,126,234,.08);}
 .points-label { font-size:3vw; text-transform:uppercase; letter-spacing:.09em;}
 .points-value { font-size:8vw; font-weight:800; line-height:1;}
 #game-container { width:100vw; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:3vw; min-height:0;}
@@ -94,7 +124,7 @@ body {
     </div>
   </div>
   <script>
-    // Data
+    // Data and config
     const nouns = [
       { name: 'butterfly', img: 'img/Butterfly.png', audio: 'audio/butterfly.mp3' },
       { name: 'duck', img: 'img/duck.png', audio: 'audio/duck.mp3' },
@@ -114,8 +144,8 @@ body {
     ];
     let videoQueue = [];
     let lastVideo = null;
-    const streakLength = 1;
-    const pointsGoal = 1;
+    const streakLength = 5; // Change this for longer progress bars!
+    const pointsGoal = streakLength; // For demo, win after filling the bar
     let streak = 0;
     let totalPoints = 0;
     let scoreMarkers = [];
@@ -147,7 +177,8 @@ body {
       for (let i = 0; i < streakLength; i++) {
         const div = document.createElement('div');
         div.className = 'score-marker';
-        div.innerHTML = '';
+        // Progress bar always starts with empty star
+        div.innerHTML = '<span class="star-empty">⭐</span>';
         header.appendChild(div);
         scoreMarkers.push(div);
       }
@@ -156,17 +187,16 @@ body {
       pointsDiv.innerHTML = `<div class="points-label">Points</div><div class="points-value" id="points-counter">0</div>`;
       header.appendChild(pointsDiv);
       document.getElementById('points-counter').textContent = totalPoints;
+      // Re-fill stars after DOM update
+      for (let i=0; i<streak; ++i) scoreMarkers[i].innerHTML = '⭐';
     }
     function animateStarToProgressBar(targetMarkerIndex) {
-      setTimeout(() => {
-        scoreMarkers[targetMarkerIndex].innerHTML = '<img src="img/star.png" width="40">';
-      }, 600);
+      scoreMarkers[targetMarkerIndex].innerHTML = '⭐';
     }
     function removeLastStar() {
-      for (let i = scoreMarkers.length - 1; i >= 0; i--) {
-        const marker = scoreMarkers[i];
-        if (marker.innerHTML.trim() !== '') {
-          marker.innerHTML = '';
+      for (let i = streakLength-1; i >= 0; i--) {
+        if (scoreMarkers[i].innerHTML !== '<span class=\"star-empty\">⭐</span>' && scoreMarkers[i].innerHTML !== '') {
+          scoreMarkers[i].innerHTML = '<span class="star-empty">⭐</span>';
           break;
         }
       }
@@ -177,10 +207,10 @@ body {
       totalPoints = 0;
       streak = 0;
       document.querySelector('.app-header').classList.remove('hidden');
-      document.querySelector('#score-header').classList.remove('hidden');
+      document.getElementById('score-header').classList.remove('hidden');
       document.querySelector('.controls').classList.remove('hidden');
-      document.querySelector('#audio-cards').classList.remove('hidden');
-      document.querySelector('#noun-img-container').classList.remove('hidden');
+      document.getElementById('audio-cards').classList.remove('hidden');
+      document.getElementById('noun-img-container').classList.remove('hidden');
       setupScoreHeader();
       loadNewRound();
     }
@@ -188,17 +218,17 @@ body {
       gameWon = true;
       celebrationInProgress = true;
       document.querySelector('.app-header').classList.add('hidden');
-      document.querySelector('#score-header').classList.add('hidden');
+      document.getElementById('score-header').classList.add('hidden');
       document.querySelector('.controls').classList.add('hidden');
-      document.querySelector('#audio-cards').classList.add('hidden');
-      document.querySelector('#noun-img-container').classList.add('hidden');
+      document.getElementById('audio-cards').classList.add('hidden');
+      document.getElementById('noun-img-container').classList.add('hidden');
       setTimeout(() => { resetGame(); }, 2000);
     }
     function updateScoreHeader(isCorrect) {
       if (gameWon || celebrationInProgress) return;
       if (isCorrect) {
+        animateStarToProgressBar(streak);
         streak++;
-        animateStarToProgressBar(streak - 1);
         if (streak === streakLength) {
           totalPoints++;
           updatePointsDisplay();
@@ -210,11 +240,9 @@ body {
             setTimeout(() => { setupScoreHeader(); }, 600);
           }
         }
-      } else {
-        if (streak > 0) {
-          removeLastStar();
-          streak--;
-        }
+      } else if (streak > 0) {
+        removeLastStar();
+        streak--;
       }
     }
     function updatePointsDisplay() {
@@ -232,9 +260,8 @@ body {
       video.loop = false;
       video.play().catch(()=>{});
       let incorrect;
-      do {
-        incorrect = nouns[Math.floor(Math.random() * nouns.length)];
-      } while (incorrect.name === noun.name);
+      do { incorrect = nouns[Math.floor(Math.random() * nouns.length)]; }
+      while (incorrect.name === noun.name);
       let audioCards = [
         { name: noun.name, audio: noun.audio, correct: true },
         { name: incorrect.name, audio: incorrect.audio, correct: false }
@@ -266,6 +293,8 @@ body {
         if (correct) playFeedback(true);
         else { updateScoreHeader(false); playFeedback(false);}
       };
+      // Fill stars initial
+      for (let i = 0; i < streak; ++i) animateStarToProgressBar(i);
     }
     function playAudio(audioPath) {
       if (gameWon || celebrationInProgress) return;
@@ -338,6 +367,7 @@ body {
       if (touchItem) touchItem.classList.remove('touching');
       touchItem = null;
     },{passive:false});
+
     setupScoreHeader();
     loadNewRound();
   </script>
