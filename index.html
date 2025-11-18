@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Noun Game — Video Celebration End</title>
+  <title>Noun Game — Fast Video Preload</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="only light">
   <style>
@@ -11,7 +11,9 @@ html, body {
   margin: 0; padding: 0; background: #fff !important; color-scheme: only light;
 }
 body {
-  min-height: 100vh !important; background: #fff !important;
+  min-height: 100vh !important;
+  background: #fff !important;
+  color-scheme: only light;
   display: flex; align-items: center; justify-content: center; width: 100vw; padding: 0;
   overflow-x: hidden; overflow-y: auto;
 }
@@ -19,74 +21,28 @@ body {
 .app-header, .points-display, .score-marker {
   background: #fff !important;
 }
-#score-header {
-  display: flex;
-  gap: 2vw;
-  align-items: center;
-  justify-content: center;
-  margin: 2vw auto 2vw auto;
-  flex-wrap: wrap;
-  width: 100vw;
-  position: relative;
-  background: #fff;
-}
-.score-marker {
-  width: 9vw;
-  height: 9vw;
-  min-width: 26px;
-  min-height: 26px;
-  border: 2.5px solid #FFC100;
-  background: #fff;
-  border-radius: 2vw;
-  margin: 0 1vw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 6vw;
-  color: #FFC100;
-  box-shadow: 0 3px 10px #eed37a20;
-  transition: background 0.2s;
-}
+#score-header { display: flex; gap: 2vw; align-items: center; justify-content: center; margin: 2vw auto 2vw auto; flex-wrap: wrap; width: 100vw; position: relative; background: #fff; }
+.score-marker { width: 9vw; height: 9vw; min-width: 26px; min-height: 26px; border: 2.5px solid #FFC100; background: #fff; border-radius: 2vw; margin: 0 1vw; display: flex; align-items: center; justify-content: center; font-size: 6vw; color: #FFC100; box-shadow: 0 3px 10px #eed37a20; transition: background 0.2s;}
 .star-empty { opacity: 0.3; filter: grayscale(1); }
 .score-marker img { width: 80%; max-width: 32px; height: auto; object-fit: contain; }
 .app-header h1 { color: #191919; }
 .app-header p { color: #424242; }
-.points-display { background: #2563EB !important; color:#fff; padding:2vw 4vw; border-radius:2vw;
-  font-weight:700; font-size:5vw; box-shadow:0 3px 10px rgba(102,126,234,.08);}
+.points-display { background: #2563EB !important; color:#fff; padding:2vw 4vw; border-radius:2vw; font-weight:700; font-size:5vw; box-shadow:0 3px 10px rgba(102,126,234,.08);}
 .points-label { font-size:3vw; text-transform:uppercase; letter-spacing:.09em;}
 .points-value { font-size:8vw; font-weight:800; line-height:1;}
-#game-container { width:100vw; flex:1; display:flex; flex-direction:column;
-  align-items:center; justify-content:flex-start; gap:3vw; min-height:0;}
-.game-content { width:100vw; margin:0; padding:0; display:flex; flex-direction:column;
-  align-items:center; justify-content:center;}
-#content-wrapper { width:100vw; display:flex; flex-direction:column; align-items:center;
-  justify-content:center;}
-#video-section { position:relative; width:100vw; max-width:100vw; height:auto; margin:0 auto 3vw auto;
-  box-sizing:border-box; display:flex; justify-content:center; align-items:center;}
-#prompt-video { width:100vw; max-width:100vw; height:auto; display:block; background:#fff !important;
-  border-radius:0; object-fit:contain; z-index:1; margin:0;}
-#noun-img-container { position:absolute; top:2vw; right:2vw; z-index:2; width:50vw; height:auto; display:flex;
-  justify-content:flex-end; align-items:flex-start; pointer-events:auto;}
-.noun-img { width:100%; height:auto; max-width:100%; border-radius:4vw; padding:1vw; background:#f3f3f3 !important;
-  border:2px solid #FF6B35; object-fit:contain; box-sizing:border-box; margin:0;}
-.controls { width:94vw; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; margin-top:2vw; margin-bottom:2vw; flex-shrink:0;}
-.btn-replay { padding:3vw 0; border-radius:2vw; border:none; width:74vw; background:#2563EB; color:#fff;
-  font-size:6vw; font-weight:700; margin:0 auto; transition:background .3s; margin-bottom:2vw;
-  box-shadow:0 4px 20px rgba(90,103,216,.08); letter-spacing:.05em;}
-#audio-cards { width:100vw; display:flex; justify-content:center; gap:4vw; flex-wrap:wrap;
-  padding-bottom:2vw;}
-.audio-card { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:2vw;
-  padding:4vw 5vw; border-radius:2vw; background:#f3f3f3 !important;
-  box-shadow:0 4px 20px rgba(102,126,234,.04); cursor:grab;
-  border:3px solid #2563EB; font-size:5vw; color:#222; font-weight:700;
-  min-width:34vw; max-width:43vw; text-align:center; margin-bottom:2vw; user-select:none;
-  -webkit-user-select:none; transition:box-shadow .2s,border-color .2s;}
-.audio-card span { font-size:4vw; text-transform:uppercase; font-family:inherit; font-weight:700;
-  letter-spacing:.05em; margin-right:1vw;}
-.audio-card button { background:rgba(60,60,60,.08); border:2px solid #2563EB; border-radius:50%;
-  width:9vw; height:9vw; font-size:6vw; cursor:pointer; display:flex; align-items:center;
-  justify-content:center; color:#2563EB; margin-left:.5vw; margin-right:.5vw; transition:background .2s;}
+#game-container { width:100vw; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:3vw; min-height:0;}
+.game-content { width:100vw; margin:0; padding:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+#content-wrapper { width:100vw; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+#video-section { position:relative; width:100vw; max-width:100vw; height:auto; margin:0 auto 3vw auto; box-sizing:border-box; display:flex; justify-content:center; align-items:center;}
+#prompt-video { width:100vw; max-width:100vw; height:auto; display:block; background:#fff !important; border-radius:0; object-fit:contain; z-index:1; margin:0;}
+#noun-img-container { position:absolute; top:2vw; right:2vw; z-index:2; width:50vw; height:auto; display:flex; justify-content:flex-end; align-items:flex-start; pointer-events:auto;}
+.noun-img { width:100%; height:auto; max-width:100%; border-radius:4vw; padding:1vw; background:#f3f3f3 !important; border:2px solid #FF6B35; object-fit:contain; box-sizing:border-box; margin:0;}
+.controls { width:94vw; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; margin-top:2vw; margin-bottom:2vw; flex-shrink:0;}
+.btn-replay { padding:3vw 0; border-radius:2vw; border:none; width:74vw; background:#2563EB; color:#fff; font-size:6vw; font-weight:700; margin:0 auto; transition:background .3s; margin-bottom:2vw; box-shadow:0 4px 20px rgba(90,103,216,.08); letter-spacing:.05em;}
+#audio-cards { width:100vw; display:flex; justify-content:center; gap:4vw; flex-wrap:wrap; padding-bottom:2vw;}
+.audio-card { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:2vw; padding:4vw 5vw; border-radius:2vw; background:#f3f3f3 !important; box-shadow:0 4px 20px rgba(102,126,234,.04); cursor:grab; border:3px solid #2563EB; font-size:5vw; color:#222; font-weight:700; min-width:34vw; max-width:43vw; text-align:center; margin-bottom:2vw; user-select:none; -webkit-user-select:none; transition:box-shadow .2s,border-color .2s;}
+.audio-card span { font-size:4vw; text-transform:uppercase; font-family:inherit; font-weight:700; letter-spacing:.05em; margin-right:1vw;}
+.audio-card button { background:rgba(60,60,60,.08); border:2px solid #2563EB; border-radius:50%; width:9vw; height:9vw; font-size:6vw; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#2563EB; margin-left:.5vw; margin-right:.5vw; transition:background .2s;}
 .audio-card button:active { background:rgba(60,60,60,.14);}
 .audio-card:active, .audio-card.touching { box-shadow:0 8px 30px rgba(102,126,234,.07); border-color:#2563EB; opacity:0.92;}
 .audio-card.dragging { opacity:0.8; box-shadow:0 12px 40px rgba(102,126,234,.07);}
@@ -108,7 +64,7 @@ body {
       <div class="game-content">
         <div id="content-wrapper">
           <div id="video-section">
-            <video id="prompt-video" autoplay playsinline></video>
+            <video id="prompt-video" autoplay playsinline preload="auto"></video>
             <div id="noun-img-container">
               <img id="noun-img" class="noun-img" src="" alt="noun">
             </div>
@@ -122,7 +78,6 @@ body {
     </div>
   </div>
   <script>
-    // Data and config
     const nouns = [
       { name: 'butterfly', img: 'img/Butterfly.png', audio: 'audio/butterfly.mp3' },
       { name: 'duck', img: 'img/duck.png', audio: 'audio/duck.mp3' },
@@ -140,6 +95,20 @@ body {
       'vid/whatisthis1.mp4',
       'vid/whatisthis2.mp4'
     ];
+    const celebrationVideo = 'vid/greatjob.mp4';
+    const feedbackVideos = ['vid/thatscorrect.mp4', 'vid/betterluck.mp4'];
+
+    // --- Preload all game videos for instant switching ---
+    const videoPreloads = [].concat(whatisthisVideos, [celebrationVideo], feedbackVideos);
+    videoPreloads.forEach(url => {
+      const v = document.createElement('video');
+      v.src = url;
+      v.preload = 'auto';
+      v.muted = true;
+      v.style.display = 'none';
+      document.body.appendChild(v);
+    });
+
     let videoQueue = [];
     let lastVideo = null;
     const streakLength = 5;
@@ -220,12 +189,12 @@ body {
       document.getElementById('noun-img-container').classList.add('hide-celebration');
       // Play celebration video and then reset
       const vid = document.getElementById('prompt-video');
-      vid.src = 'vid/greatjob.mp4';
+      vid.src = celebrationVideo;
       vid.loop = false;
       vid.play().catch(()=>{});
       vid.onended = function() {
         vid.onended = null;
-        setTimeout(() => { resetGame(); }, 400); // short pause before restart
+        setTimeout(() => { resetGame(); }, 400);
       }
     }
     function updateScoreHeader(isCorrect) {
@@ -313,7 +282,7 @@ body {
     function playFeedback(isCorrect) {
       if (gameWon || celebrationInProgress) return;
       const promptVideo = document.getElementById('prompt-video');
-      promptVideo.src = isCorrect ? 'vid/thatscorrect.mp4' : 'vid/betterluck.mp4';
+      promptVideo.src = isCorrect ? feedbackVideos[0] : feedbackVideos[1];
       promptVideo.loop = false;
       promptVideo.onended = null;
       promptVideo.onended = function() {
@@ -325,7 +294,6 @@ body {
       };
       promptVideo.play().catch(()=>{});
     }
-
     // --- TOUCH DRAG SUPPORT WITH DRAG CLONE ---
     let touchItem = null;
     let dragClone = null;
@@ -370,7 +338,6 @@ body {
       if (touchItem) touchItem.classList.remove('touching');
       touchItem = null;
     },{passive:false});
-
     setupScoreHeader();
     loadNewRound();
   </script>
