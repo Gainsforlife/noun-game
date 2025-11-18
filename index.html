@@ -13,6 +13,7 @@
       --accent-2: #FF6B35;
       --card-gap: 1rem;
       --section-vertical-gap: 1.25rem;
+      --video-max-width: 980px; /* central constraint used by video & controls */
     }
 
     /* Reset / base */
@@ -64,26 +65,40 @@
     #content-wrapper{ width:100%; display:flex; flex-direction:column; gap:var(--section-vertical-gap); align-items:center; }
 
     /* Video + noun wrapper
-       NOTE: ensure the .video-wrapper reserves space in the layout so controls below it stay below.
-       Use aspect-ratio (modern browsers) and fallback min-height so the absolutely positioned
-       videos don't collapse the wrapper to zero height and overlap the controls.
+       Reserve layout space so the absolutely-positioned videos don't overlap controls.
     */
     #video-section{ width:100%; display:flex; flex-direction:column; align-items:center; gap:var(--section-vertical-gap); position:relative; }
     .video-wrapper{
       width:100%;
-      max-width: 980px;
+      max-width: var(--video-max-width);
       position:relative;
       display:block;
       box-sizing:border-box;
       padding: 0;
       cursor:pointer;
-      background: transparent; /* ensure transparent to avoid black background */
+      background: transparent;
       border-radius:12px;
       overflow:visible;
 
-      /* Reserve space so the absolutely-positioned video(s) don't overlap following content */
-      aspect-ratio: 16 / 9; /* modern browsers */
-      min-height: 220px;    /* fallback for older browsers */
+      /* Reserve space so controls sit below */
+      aspect-ratio: 16 / 9;
+      min-height: 220px;
+      margin: 0 auto;
+    }
+
+    /* placeholder image shown in the video position when we want the "whatisthis.png" */
+    .video-placeholder {
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      border-radius:12px;
+      z-index:1; /* behind videos (z-index:2) and noun (z-index:6) */
+      pointer-events:none;
+      display:none; /* toggled from JS */
+      background: transparent;
     }
 
     /* Two stacked videos for smooth crossfades */
@@ -92,10 +107,10 @@
       height:100%;
       object-fit:contain;
       border-radius:12px;
-      background: transparent; /* avoid black background when swapping sources */
+      background: transparent;
       display:block;
       box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-      position:absolute; /* stack inside wrapper but wrapper now reserves height */
+      position:absolute;
       left:0;
       top:0;
       transition: opacity 260ms cubic-bezier(.22,.9,.3,1);
@@ -104,20 +119,16 @@
       will-change: opacity;
       opacity:0;
       pointer-events:none;
-      z-index:2; /* behind noun image and above page background */
+      z-index:2;
     }
-
-    /* the "visible" video is interactive */
     .prompt-video.visible { opacity:1; pointer-events:auto; }
 
-    /* Noun card absolutely positioned over the video-wrapper so it always overlaps the video.
-       Keep it above videos with a higher z-index so it remains interactive.
-    */
+    /* Noun card above video */
     #noun-img-container{
       position:absolute;
       top: 6%;
       right: 6%;
-      z-index: 6; /* above videos */
+      z-index: 6;
       width: 36vw;
       max-width: 260px;
       pointer-events: auto;
@@ -139,19 +150,20 @@
     }
 
     /* Controls + audio cards group that always sits BELOW the video (stacked vertically)
-       Make sure these have a lower z-index than the video wrapper so they appear visually below.
+       Ensure it's centered and stays visually below the video area.
     */
     .bottom-controls {
       width:100%;
-      max-width: 980px;
+      max-width: var(--video-max-width);
       display:flex;
       flex-direction:column;
       align-items:center;
       gap: var(--card-gap);
       padding: .75rem 0;
       box-sizing:border-box;
-      z-index:1; /* ensure below videos and noun image */
-      position:relative; /* normal flow under .video-wrapper */
+      z-index:1;
+      position:relative;
+      margin: 0 auto; /* center under video */
     }
     .controls { width:100%; display:flex; justify-content:center; align-items:center; padding:0; gap:.75rem; }
     .btn-replay{
@@ -169,17 +181,26 @@
       width: 55%;
     }
 
-    /* Audio cards: centered below the video, with consistent gap/padding */
+    /* Audio cards: keep centered under the button and prevent stacking on mobile.
+       The container shares the same max-width as the video wrapper and is centered.
+    */
     #audio-cards{
       width:100%;
       display:flex;
       justify-content:center;
       gap: var(--card-gap);
-      flex-wrap:wrap;
+      flex-wrap:nowrap;           /* prevent stacking */
+      overflow-x:auto;           /* allow scrolling if they can't shrink further */
       padding: .4rem 0;
       box-sizing:border-box;
       z-index:1;
+      margin: 0 auto;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      -webkit-overflow-scrolling: touch;
     }
+
+    /* audio-card sizing: by default aim two side-by-side that fit the video container */
     .audio-card{
       display:flex;
       align-items:center;
@@ -189,14 +210,20 @@
       background:#f3f3f3;
       cursor:grab;
       border:3px solid var(--accent);
-      min-width:160px;
-      max-width:320px;
       box-sizing:border-box;
       transition: transform .12s, box-shadow .12s;
+      flex: 0 0 calc(50% - (var(--card-gap) / 2)); /* target two cards side-by-side */
+      max-width: calc(50% - (var(--card-gap) / 2));
+      min-width: 160px; /* prevents them from becoming too narrow */
+      justify-content:space-between;
     }
     .audio-card:active, .audio-card.touching { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(37,99,235,.08); }
     .audio-card span{ font-weight:800; letter-spacing:.04em; font-size:clamp(.8rem, 3.6vw, 1.02rem); text-transform:uppercase; color:#222; }
     .audio-card button{ width:42px; height:42px; border-radius:999px; border:2px solid var(--accent); background:rgba(0,0,0,.05); color:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+
+    /* Hide horizontal scrollbar in most browsers while keeping scrollable behavior */
+    #audio-cards::-webkit-scrollbar { height: 8px; }
+    #audio-cards::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 6px; }
 
     /* Drag clone */
     .drag-clone{ position:fixed; pointer-events:none; z-index:9999; transform:scale(1.06); box-shadow:0 20px 40px rgba(0,0,0,.12); border-radius:12px; }
@@ -213,7 +240,6 @@
       transition: left 1s cubic-bezier(.22,.9,.3,1), top 1s cubic-bezier(.22,.9,.3,1), transform 1s cubic-bezier(.22,.9,.3,1), opacity 0.6s ease;
       filter: drop-shadow(0 12px 20px rgba(0,0,0,.18));
     }
-    /* small sparkle dots inside the flying star */
     .flying-star .spark {
       position: absolute;
       width: 8px;
@@ -234,6 +260,7 @@
     /* Desktop adjustments */
     @media (min-width:900px){
       .video-wrapper{ max-width: 1100px; aspect-ratio: 16/9; }
+      :root { --video-max-width: 1100px; }
       .prompt-video{ max-height:72vh; border-radius:16px; }
       #noun-img-container{
         top: 10%;
@@ -243,14 +270,16 @@
       }
       .bottom-controls { padding: 1rem 0; gap: 1rem; }
       .btn-replay{ width: 320px; }
-      #audio-cards{ gap: 1rem; justify-content:flex-start; }
-      .audio-card{ min-width:180px; }
+      /* keep audio cards centered on large screens and give them fixed comfortable width */
+      #audio-cards{ gap: 1rem; justify-content:center; overflow-x: visible; padding-left: 0; padding-right: 0; }
+      .audio-card{ flex: 0 0 220px; max-width: 220px; min-width: 180px; }
     }
 
     /* Small screens tiny adjustments */
     @media (max-width:360px){
       #noun-img-container{ width:44vw; max-width:160px; top:4%; right:4%; }
       .btn-replay{ width:68%; min-width: 160px; }
+      .audio-card{ min-width: 140px; max-width: calc(50% - (var(--card-gap) / 2)); }
     }
   </style>
 </head>
@@ -270,6 +299,9 @@
 
           <div id="video-section">
             <div class="video-wrapper" id="video-wrapper" aria-hidden="false" title="Click to play with sound">
+              <!-- placeholder image for "whatisthis.png" -->
+              <img id="video-placeholder" class="video-placeholder" src="img/whatisthis.png" alt="prompt placeholder (what is this)">
+
               <!-- Two stacked videos for crossfading to avoid black flashes -->
               <video id="prompt-video-a" class="prompt-video" playsinline preload="metadata" ></video>
               <video id="prompt-video-b" class="prompt-video" playsinline preload="metadata" ></video>
@@ -309,11 +341,16 @@
     const whatisthisVideos = ['vid/whatisthis.mp4', 'vid/whatisthis1.mp4', 'vid/whatisthis2.mp4'];
     const celebrationVideo = 'vid/greatjob.mp4';
     const feedbackVideos = ['vid/thatscorrect.mp4', 'vid/betterluck.mp4'];
+    const welcomeVideo = 'vid/welcome.mp4'; // new welcome clip to play once
     const STAR_SRC = 'img/star.png'; // user-provided star image used for progress and animation
 
     /* ---------- STATE / MEDIA PLAYBACK (with double-buffered video to avoid black flash) ---------- */
     const videoA = document.getElementById('prompt-video-a');
     const videoB = document.getElementById('prompt-video-b');
+    const placeholderImg = document.getElementById('video-placeholder');
+    const nounContainer = document.getElementById('noun-img-container');
+    const bottomControls = document.querySelector('.bottom-controls');
+
     videoA.muted = true;
     videoB.muted = true;
 
@@ -327,6 +364,9 @@
     let userInteracted = false;   // becomes true when user clicks Start or the video wrapper
     let mediaQueue = [];          // FIFO queue of {type:'audio'|'video', src, onEnded, onStart}
     let currentMedia = null;
+
+    // localStorage flag key: welcome plays only once (persisted)
+    const WELCOME_FLAG_KEY = 'noungame_welcome_played';
 
     function setUserInteracted() {
       if (userInteracted) return;
@@ -342,6 +382,8 @@
     document.getElementById('start-btn').addEventListener('click', function (e) {
       e.stopPropagation();
       setUserInteracted();
+      // If welcome hasn't played and it's still queued, the queue system will play welcome first.
+      // Otherwise will play the prompt video as before.
       playPromptVideo();
     });
     document.getElementById('video-wrapper').addEventListener('click', function (e) {
@@ -372,11 +414,9 @@
       playEl.onended = null;
       playEl.onerror = null;
 
-      // set src and prepare
+      // set src and prepare (avoid re-assigning if already loaded)
       if (playEl.getAttribute('data-loaded-src') !== src) {
-        try {
-          playEl.pause();
-        } catch(e){}
+        try { playEl.pause(); } catch(e){}
         playEl.removeAttribute('src');
         playEl.load && playEl.load();
         playEl.src = src;
@@ -389,6 +429,20 @@
 
       // attach handlers
       const started = () => {
+        // hide placeholder and noun for the welcome clip, and hide controls while welcome or celebration play
+        if (src === welcomeVideo) {
+          // while welcome plays we want the video area to render the welcome clip only
+          if (placeholderImg) placeholderImg.style.display = 'none';
+          if (nounContainer) nounContainer.style.visibility = 'hidden';
+          if (bottomControls) bottomControls.style.display = 'none';
+        } else if (src === celebrationVideo) {
+          // hide controls for celebration
+          if (bottomControls) bottomControls.style.display = 'none';
+        } else {
+          // for all other videos, ensure controls are visible
+          if (bottomControls) bottomControls.style.display = '';
+        }
+
         if (typeof onStart === 'function') {
           try { onStart(); } catch(e){ console.error(e); }
         }
@@ -397,6 +451,14 @@
       playEl.onplaying = started;
 
       playEl.onended = () => {
+        // restore controls after any non-prompt video ends (welcome and celebration will hide controls while playing)
+        if (bottomControls) bottomControls.style.display = '';
+
+        // If the welcome video just finished, mark it in storage so it won't play again
+        if (src === welcomeVideo) {
+          try { localStorage.setItem(WELCOME_FLAG_KEY, 'true'); } catch(e){}
+        }
+
         if (typeof onEnded === 'function') {
           try { onEnded(); } catch(e){ console.error(e); }
         }
@@ -410,19 +472,24 @@
         const p = playEl.play();
         if (p && typeof p.then === 'function') {
           p.then(() => {
+            // crossfade: bring playEl to front by toggling "visible"
             playEl.classList.add('visible');
             prevEl.classList.remove('visible');
 
+            // After crossfade, pause the previous element and swap roles
             setTimeout(() => {
               try { prevEl.pause(); } catch(e){}
+              // swap references
               standbyVideoEl = prevEl;
               activeVideoEl = playEl;
             }, CROSSFADE_DURATION + 20);
           }).catch(err => {
             console.warn('Video play blocked or failed:', err);
+            // fallback: call onended to avoid hang
             playEl.onended && playEl.onended();
           });
         } else {
+          // older browsers may not return a promise
           playEl.classList.add('visible');
           prevEl.classList.remove('visible');
           setTimeout(() => {
@@ -455,7 +522,9 @@
           const next = mediaQueue.shift();
           if (next) startMedia(next);
         };
+        // respect userInteracted for muting
         audioPlayer.muted = !userInteracted;
+        // audio.start
         audioPlayer.play().catch(err => {
           console.warn('Audio play blocked or failed:', err);
           audioPlayer.onended && audioPlayer.onended();
@@ -493,6 +562,7 @@
       for (let i = 0; i < streakLength; i++) {
         const div = document.createElement('div');
         div.className = 'score-marker';
+        // empty visual (small star placeholder)
         div.innerHTML = '<span class="star-empty">⭐</span>';
         header.appendChild(div);
         scoreMarkers.push(div);
@@ -506,6 +576,7 @@
     }
 
     function animateStarToProgressBarIndex(targetIndex) {
+      // fallback immediate static fill (if no animation in progress)
       if (!scoreMarkers[targetIndex]) return;
       scoreMarkers[targetIndex].innerHTML = `<img src="${STAR_SRC}" class="small-star" alt="star">`;
     }
@@ -522,13 +593,17 @@
     function playCelebration() {
       gameWon = true;
       celebrationInProgress = true;
+      // enqueue celebration; playVideoSmooth will hide bottom controls while it plays
       playVideoQueued(celebrationVideo, () => { setTimeout(() => { resetGame(); }, 400); });
     }
 
     function updateScoreHeader(isCorrect) {
       if (gameWon || celebrationInProgress) return;
       if (isCorrect) {
+        // increment streak and set visual - the animated star already landed on the marker,
+        // this ensures internal state updates and handles streak completion logic.
         streak++;
+        // ensure UI shows star (idempotent)
         if (streak - 1 >= 0) animateStarToProgressBarIndex(streak - 1);
 
         if (streak === streakLength) {
@@ -544,6 +619,7 @@
         }
       } else {
         if (streak > 0) {
+          // remove last filled star
           for (let i = scoreMarkers.length - 1; i >= 0; i--) {
             const marker = scoreMarkers[i];
             if (marker.innerHTML.trim() !== '') {
@@ -651,13 +727,26 @@
       document.getElementById('noun-img').src = noun.img;
       document.getElementById('noun-img').setAttribute('data-noun', noun.name);
 
+      // Randomly pick one of the "what is this?" variations for this round
       const videoUrl = pickRandomPromptVideo();
       lastVideo = videoUrl;
 
-      // If user has interacted already, enqueue the prompt to play. Otherwise prepare metadata/frame on standby
+      // Show the "whatisthis.png" placeholder in the video area and hide the noun card until the prompt video actually starts.
+      if (placeholderImg) {
+        placeholderImg.src = 'img/whatisthis.png';
+        placeholderImg.style.display = 'block';
+      }
+      if (nounContainer) nounContainer.style.visibility = 'hidden';
+
+      // If user has interacted already, enqueue the prompt to play with an onStart that hides the placeholder and reveals the noun
       if (userInteracted) {
-        playVideoQueued(videoUrl, null);
+        playVideoQueued(videoUrl, null, function whenPromptStarts() {
+          // when prompt starts playing, hide placeholder and reveal noun
+          if (placeholderImg) placeholderImg.style.display = 'none';
+          if (nounContainer) nounContainer.style.visibility = 'visible';
+        });
       } else {
+        // preload into standby video element so that when user interacts we can play without black flash.
         try {
           standbyVideoEl.pause();
           standbyVideoEl.removeAttribute('src');
@@ -723,21 +812,32 @@
       const pending = standbyVideoEl.getAttribute('data-loaded-src');
       let src = pending || pickRandomPromptVideo();
       standbyVideoEl.removeAttribute('data-loaded-src');
-      playVideoQueued(src, null);
+
+      // When the prompt actually starts, hide the placeholder and show the noun card.
+      playVideoQueued(src, null, function whenPromptStarts() {
+        if (placeholderImg) placeholderImg.style.display = 'none';
+        if (nounContainer) nounContainer.style.visibility = 'visible';
+      });
     }
 
     function playFeedback(isCorrect) {
+      // If correct, animate a big star while the "that's correct" video plays.
       if (gameWon || celebrationInProgress) return;
 
       if (isCorrect) {
+        // target marker index = current streak (we will increment streak after video ends)
         const targetIndex = streak;
+        // enqueue feedback video with an onStart that kicks off the flying-star animation
         playVideoQueued(feedbackVideos[0], function () {
+          // after video ends, update score and load next round
           updateScoreHeader(true);
           setTimeout(loadNewRound, 500);
         }, function onStart() {
+          // only start animation when the video actually starts playing
           flyStarFromNounToMarker(targetIndex);
         });
       } else {
+        // wrong answer -> play "better luck" video, no star animation
         playVideoQueued(feedbackVideos[1], function () {
           updateScoreHeader(false);
           setTimeout(loadNewRound, 500);
@@ -794,6 +894,7 @@
 
     /* ---------- INIT ---------- */
     (function init(){
+      // start muted until user interacts; setUserInteracted() will unmute
       audioPlayer.muted = true;
       videoA.muted = true;
       videoB.muted = true;
@@ -802,8 +903,31 @@
       activeVideoEl.classList.add('visible');
       standbyVideoEl.classList.remove('visible');
 
+      // show placeholder initially (noun hidden)
+      if (placeholderImg) placeholderImg.style.display = 'block';
+      if (nounContainer) nounContainer.style.visibility = 'hidden';
+
       setupScoreHeader();
-      loadNewRound();
+
+      // If welcome has NOT been played (persisted), enqueue it to play once before the first round.
+      const welcomePlayed = (function(){
+        try { return localStorage.getItem(WELCOME_FLAG_KEY) === 'true'; } catch(e) { return false; }
+      })();
+
+      if (!welcomePlayed) {
+        // enqueue welcome as first media. When it ends, it will mark the flag and we'll load the first round.
+        // If the user interacts (or autoplay muted is allowed) it will play immediately; otherwise it waits for gesture.
+        playVideoQueued(welcomeVideo, function onWelcomeEnded(){
+          // after welcome ends we load the first round
+          loadNewRound();
+        }, function onWelcomeStart(){
+          // nothing extra here, playVideoSmooth already hides controls/noun for welcome
+        });
+        // Do not preload the prompt round now; it will be set up when loadNewRound runs after welcome ends.
+      } else {
+        // welcome already played in previous session -> just load the first round immediately
+        loadNewRound();
+      }
     })();
   </script>
 </body>
