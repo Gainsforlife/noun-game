@@ -2,18 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Noun Game – Mobile Drag White Theme</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Noun Game — Always White Background</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="color-scheme" content="only light">
   <style>
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
   background: #fff !important;
+  color-scheme: only light;
 }
 body {
   min-height: 100vh !important;
   background: #fff !important;
+  color-scheme: only light;
+  -webkit-tap-highlight-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,50 +26,46 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
 }
-.app-wrapper {
+.app-wrapper,
+#game-container,
+.game-content,
+#content-wrapper,
+#video-section,
+#audio-cards,
+.controls,
+.app-header,
+.points-display,
+.score-marker {
   background: #fff !important;
-  border-radius: 0;
-  max-width: 100vw;
-  width: 100vw;
-  min-height: 100vh;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: hidden;
 }
-.app-header { text-align: center; padding: 2vw 0; width: 100vw; background: #fff;}
-.app-header h1 { font-size:7vw; color:#111; margin-bottom:.5vw; letter-spacing:.05em;}
-.app-header p { color:#444; font-size:4vw; margin-top:1vw;}
-#score-header { display:flex; gap:4vw; align-items:center; justify-content:center; margin:2vw auto; flex-wrap:wrap; width:86vw; position:relative; flex-shrink:0; background: #fff;}
-.score-marker { width:14vw; height:14vw; border:3px solid #FF6B35; border-radius:3vw; background:#fff; box-sizing:border-box; margin-right:.2vw; display:flex; align-items:center; justify-content:center; overflow:hidden;}
-.score-marker img { width:8vw; height:8vw; object-fit:contain;}
-.points-display { background:#2563EB; color:#fff; padding:2vw 4vw; border-radius:2vw; font-weight:700; font-size:5vw; box-shadow:0 3px 10px rgba(102,126,234,.14); letter-spacing:.04em;}
+#prompt-video, .noun-img, .audio-card, .drag-clone {
+  background: #f7f7f7 !important;
+}
+.app-header h1 { color: #191919; }
+.app-header p { color: #424242; }
+.score-marker img { width:8vw; height:8vw; object-fit:contain; }
+.points-display { background: #2563EB !important; color:#fff; padding:2vw 4vw; border-radius:2vw; font-weight:700; font-size:5vw; box-shadow:0 3px 10px rgba(102,126,234,.08); }
 .points-label { font-size:3vw; text-transform:uppercase; letter-spacing:.09em;}
 .points-value { font-size:8vw; font-weight:800; line-height:1;}
-#game-container { width:100vw; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:3vw; min-height:0; background: #fff;}
-.game-content { width:100vw; margin:0; padding:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background: #fff;}
-#content-wrapper { width:100vw; display:flex; flex-direction:column; align-items:center; justify-content:center; background: #fff;}
-#video-section { position:relative; width:100vw; max-width:100vw; height:auto; margin:0 auto 3vw auto; box-sizing:border-box; display:flex; justify-content:center; align-items:center; background: #fff;}
-#prompt-video { width:100vw; max-width:100vw; height:auto; display:block; background:#fff; border-radius:0; object-fit:contain; z-index:1; margin:0;}
-#noun-img-container { position:absolute; top:2vw; right:2vw; z-index:2; width:50vw; height:auto; display:flex; justify-content:flex-end; align-items:flex-start; pointer-events:auto; background: transparent;}
-.noun-img { width:100%; height:auto; max-width:100%; border-radius:4vw; padding:1vw; background:#f3f3f3; border:2px solid #FF6B35; object-fit:contain; box-sizing:border-box; margin:0;}
-.controls { width:94vw; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; margin-top:2vw; margin-bottom:2vw; flex-shrink:0; background: #fff;}
+#game-container { width:100vw; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:3vw; min-height:0;}
+.game-content { width:100vw; margin:0; padding:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+#content-wrapper { width:100vw; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+#video-section { position:relative; width:100vw; max-width:100vw; height:auto; margin:0 auto 3vw auto; box-sizing:border-box; display:flex; justify-content:center; align-items:center;}
+#prompt-video { width:100vw; max-width:100vw; height:auto; display:block; background:#fff !important; border-radius:0; object-fit:contain; z-index:1; margin:0;}
+#noun-img-container { position:absolute; top:2vw; right:2vw; z-index:2; width:50vw; height:auto; display:flex; justify-content:flex-end; align-items:flex-start; pointer-events:auto;}
+.noun-img { width:100%; height:auto; max-width:100%; border-radius:4vw; padding:1vw; background:#f3f3f3 !important; border:2px solid #FF6B35; object-fit:contain; box-sizing:border-box; margin:0;}
+.controls { width:94vw; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; margin-top:2vw; margin-bottom:2vw; flex-shrink:0;}
 .btn-replay { padding:3vw 0; border-radius:2vw; border:none; width:74vw; background:#2563EB; color:#fff; font-size:6vw; font-weight:700; margin:0 auto; transition:background .3s; margin-bottom:2vw; box-shadow:0 4px 20px rgba(90,103,216,.08); letter-spacing:.05em;}
-#audio-cards { width:100vw; display:flex; justify-content:center; gap:4vw; flex-wrap:wrap; padding-bottom:2vw; background: #fff;}
-.audio-card { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:2vw; padding:4vw 5vw; border-radius:2vw; background:#f3f3f3; box-shadow:0 4px 20px rgba(102,126,234,.08); cursor:grab; border:3px solid #2563EB; font-size:5vw; color:#222; font-weight:700; min-width:34vw; max-width:43vw; text-align:center; margin-bottom:2vw; user-select:none; -webkit-user-select:none; transition:box-shadow .2s,border-color .2s;}
+#audio-cards { width:100vw; display:flex; justify-content:center; gap:4vw; flex-wrap:wrap; padding-bottom:2vw;}
+.audio-card { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:2vw; padding:4vw 5vw; border-radius:2vw; background:#f3f3f3 !important; box-shadow:0 4px 20px rgba(102,126,234,.04); cursor:grab; border:3px solid #2563EB; font-size:5vw; color:#222; font-weight:700; min-width:34vw; max-width:43vw; text-align:center; margin-bottom:2vw; user-select:none; -webkit-user-select:none; transition:box-shadow .2s,border-color .2s;}
 .audio-card span { font-size:4vw; text-transform:uppercase; font-family:inherit; font-weight:700; letter-spacing:.05em; margin-right:1vw;}
-.audio-card button { background:rgba(60,60,60,.10); border:2px solid #2563EB; border-radius:50%; width:9vw; height:9vw; font-size:6vw; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#2563EB; margin-left:.5vw; margin-right:.5vw; transition:background .2s;}
-.audio-card button:active { background:rgba(60,60,60,.18);}
-.audio-card:active, .audio-card.touching { box-shadow:0 8px 30px rgba(102,126,234,.14); border-color:#2563EB; opacity:0.92;}
-.audio-card.dragging { opacity:0.8; box-shadow:0 12px 40px rgba(102,126,234,.13);}
-.drag-clone { background: #f3f3f3; position: fixed; pointer-events: none; z-index: 9999; opacity: 0.9; box-shadow: 0 18px 40px #aaa; transform: scale(1.08) rotate(2deg); transition: none; }
+.audio-card button { background:rgba(60,60,60,.08); border:2px solid #2563EB; border-radius:50%; width:9vw; height:9vw; font-size:6vw; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#2563EB; margin-left:.5vw; margin-right:.5vw; transition:background .2s;}
+.audio-card button:active { background:rgba(60,60,60,.14);}
+.audio-card:active, .audio-card.touching { box-shadow:0 8px 30px rgba(102,126,234,.07); border-color:#2563EB; opacity:0.92;}
+.audio-card.dragging { opacity:0.8; box-shadow:0 12px 40px rgba(102,126,234,.07);}
+.drag-clone { background: #f3f3f3 !important; position: fixed; pointer-events: none; z-index: 9999; opacity: 0.9; box-shadow: 0 18px 40px #aaa; transform: scale(1.08) rotate(2deg); transition: none; }
 @media (min-width:700px) {
-  .app-header, .game-content, #content-wrapper, #video-section, #prompt-video, body, html, .app-wrapper {
-    background: #fff !important;
-  }
+  .app-header, .game-content, #content-wrapper, #video-section, #prompt-video, body, html, .app-wrapper { background: #fff !important; }
 }
   </style>
 </head>
