@@ -86,7 +86,7 @@
       margin: 0 auto;
     }
 
-    /* placeholder image shown in the video position when we want the "whatisthis.png" */
+    /* placeholder image shown in the video position (renamed to welcome.png) */
     .video-placeholder {
       position:absolute;
       left:0;
@@ -299,8 +299,8 @@
 
           <div id="video-section">
             <div class="video-wrapper" id="video-wrapper" aria-hidden="false" title="Click to play with sound">
-              <!-- placeholder image for "whatisthis.png" -->
-              <img id="video-placeholder" class="video-placeholder" src="img/whatisthis.png" alt="prompt placeholder (what is this)">
+              <!-- placeholder image for "welcome.png" (renamed from whatisthis.png) -->
+              <img id="video-placeholder" class="video-placeholder" src="img/welcome.png" alt="welcome placeholder">
 
               <!-- Two stacked videos for crossfading to avoid black flashes -->
               <video id="prompt-video-a" class="prompt-video" playsinline preload="metadata" ></video>
@@ -368,6 +368,9 @@
     // localStorage flag key: welcome plays only once (persisted)
     const WELCOME_FLAG_KEY = 'noungame_welcome_played';
 
+    // tracks the last prompt video selected for the current round so Start repeats the same one
+    let lastVideo = null;
+
     function setUserInteracted() {
       if (userInteracted) return;
       userInteracted = true;
@@ -378,17 +381,60 @@
       }
     }
 
-    // attach gesture handlers to start button and video-wrapper
+    // unified handler for initial user click (start button or video area)
+    function handleFirstClickOrStart() {
+      setUserInteracted();
+
+      const welcomePlayed = (function(){
+        try { return localStorage.getItem(WELCOME_FLAG_KEY) === 'true'; } catch(e) { return false; }
+      })();
+
+      if (!welcomePlayed) {
+        // Play the welcome clip first (guaranteed by user gesture), then play the current round's prompt (lastVideo).
+        // Hide placeholder / noun / controls while welcome plays (playVideoSmooth does this on 'onplaying' for welcomeVideo).
+        playVideoQueued(welcomeVideo, function onWelcomeEnded(){
+          try { localStorage.setItem(WELCOME_FLAG_KEY, 'true'); } catch(e){}
+          // after welcome ends, if we have a preselected lastVideo, play it; otherwise load a new round.
+          if (lastVideo) {
+            playVideoQueued(lastVideo, null, function whenPromptStarts(){
+              if (placeholderImg) placeholderImg.style.display = 'none';
+              if (nounContainer) nounContainer.style.visibility = 'visible';
+            });
+          } else {
+            // fall back: set up new round and play
+            loadNewRound();
+            if (lastVideo) {
+              playVideoQueued(lastVideo, null, function whenPromptStarts(){
+                if (placeholderImg) placeholderImg.style.display = 'none';
+                if (nounContainer) nounContainer.style.visibility = 'visible';
+              });
+            }
+          }
+        }, function onWelcomeStart(){
+          // playVideoSmooth already hides controls/noun for welcome; nothing else required here.
+        });
+        return;
+      }
+
+      // welcome already played: replay the current prompt (lastVideo) — do NOT pick a different random video.
+      if (lastVideo) {
+        playVideoQueued(lastVideo, null, function whenPromptStarts(){
+          if (placeholderImg) placeholderImg.style.display = 'none';
+          if (nounContainer) nounContainer.style.visibility = 'visible';
+        });
+      } else {
+        // no lastVideo yet: just start the normal prompt flow (this will pick one)
+        playPromptVideo();
+      }
+    }
+
+    // attach handlers to start button and video-wrapper
     document.getElementById('start-btn').addEventListener('click', function (e) {
       e.stopPropagation();
-      setUserInteracted();
-      // If welcome hasn't played and it's still queued, the queue system will play welcome first.
-      // Otherwise will play the prompt video as before.
-      playPromptVideo();
+      handleFirstClickOrStart();
     });
     document.getElementById('video-wrapper').addEventListener('click', function (e) {
-      setUserInteracted();
-      playPromptVideo();
+      handleFirstClickOrStart();
     });
 
     function enqueueMedia(item) {
@@ -431,7 +477,6 @@
       const started = () => {
         // hide placeholder and noun for the welcome clip, and hide controls while welcome or celebration play
         if (src === welcomeVideo) {
-          // while welcome plays we want the video area to render the welcome clip only
           if (placeholderImg) placeholderImg.style.display = 'none';
           if (nounContainer) nounContainer.style.visibility = 'hidden';
           if (bottomControls) bottomControls.style.display = 'none';
@@ -485,7 +530,9 @@
             }, CROSSFADE_DURATION + 20);
           }).catch(err => {
             console.warn('Video play blocked or failed:', err);
-            // fallback: call onended to avoid hang
+            // If play() was blocked by autoplay policies, do not silently call onended for welcome;
+            // instead, mark it as blocked and show a visual hint. For now we fallback to calling onended
+            // so queue continues — but because we're now starting welcome on a user gesture this should be rare.
             playEl.onended && playEl.onended();
           });
         } else {
@@ -540,8 +587,6 @@
     /* ---------- SCORING & UI ---------- */
     const streakLength = 5;
     const pointsGoal = 3;
-    let videoQueue = [];
-    let lastVideo = null;
     let streak = 0, totalPoints = 0;
     let scoreMarkers = [];
     let gameWon = false, celebrationInProgress = false;
@@ -572,11 +617,9 @@
       pointsDiv.innerHTML = `<div class="points-label">Points</div><div class="points-value" id="points-counter">0</div>`;
       header.appendChild(pointsDiv);
       document.getElementById('points-counter').textContent = totalPoints;
-      for (let i = 0; i < streak; ++i) scoreMarkers[i].innerHTML = `<img src="${STAR_SRC}" class="small-star" alt="star">`;
     }
 
     function animateStarToProgressBarIndex(targetIndex) {
-      // fallback immediate static fill (if no animation in progress)
       if (!scoreMarkers[targetIndex]) return;
       scoreMarkers[targetIndex].innerHTML = `<img src="${STAR_SRC}" class="small-star" alt="star">`;
     }
@@ -593,17 +636,13 @@
     function playCelebration() {
       gameWon = true;
       celebrationInProgress = true;
-      // enqueue celebration; playVideoSmooth will hide bottom controls while it plays
       playVideoQueued(celebrationVideo, () => { setTimeout(() => { resetGame(); }, 400); });
     }
 
     function updateScoreHeader(isCorrect) {
       if (gameWon || celebrationInProgress) return;
       if (isCorrect) {
-        // increment streak and set visual - the animated star already landed on the marker,
-        // this ensures internal state updates and handles streak completion logic.
         streak++;
-        // ensure UI shows star (idempotent)
         if (streak - 1 >= 0) animateStarToProgressBarIndex(streak - 1);
 
         if (streak === streakLength) {
@@ -619,7 +658,6 @@
         }
       } else {
         if (streak > 0) {
-          // remove last filled star
           for (let i = scoreMarkers.length - 1; i >= 0; i--) {
             const marker = scoreMarkers[i];
             if (marker.innerHTML.trim() !== '') {
@@ -727,34 +765,25 @@
       document.getElementById('noun-img').src = noun.img;
       document.getElementById('noun-img').setAttribute('data-noun', noun.name);
 
-      // Randomly pick one of the "what is this?" variations for this round
+      // Randomly pick one of the "what is this?" variations for this round and store it as lastVideo.
       const videoUrl = pickRandomPromptVideo();
       lastVideo = videoUrl;
 
-      // Show the "whatisthis.png" placeholder in the video area and hide the noun card until the prompt video actually starts.
+      // Show the "welcome.png" placeholder in the video area and hide the noun card until the prompt video actually starts.
       if (placeholderImg) {
-        placeholderImg.src = 'img/whatisthis.png';
+        placeholderImg.src = 'img/welcome.png'; // renamed from whatisthis.png as requested
         placeholderImg.style.display = 'block';
       }
       if (nounContainer) nounContainer.style.visibility = 'hidden';
 
-      // If user has interacted already, enqueue the prompt to play with an onStart that hides the placeholder and reveals the noun
-      if (userInteracted) {
-        playVideoQueued(videoUrl, null, function whenPromptStarts() {
-          // when prompt starts playing, hide placeholder and reveal noun
-          if (placeholderImg) placeholderImg.style.display = 'none';
-          if (nounContainer) nounContainer.style.visibility = 'visible';
-        });
-      } else {
-        // preload into standby video element so that when user interacts we can play without black flash.
-        try {
-          standbyVideoEl.pause();
-          standbyVideoEl.removeAttribute('src');
-          standbyVideoEl.src = videoUrl;
-          standbyVideoEl.setAttribute('data-loaded-src', videoUrl);
-          standbyVideoEl.load && standbyVideoEl.load();
-        } catch (e) { /* ignore */ }
-      }
+      // Preload the prompt into the standby element so that when user interacts we can play without black flash.
+      try {
+        standbyVideoEl.pause();
+        standbyVideoEl.removeAttribute('src');
+        standbyVideoEl.src = videoUrl;
+        standbyVideoEl.setAttribute('data-loaded-src', videoUrl);
+        standbyVideoEl.load && standbyVideoEl.load();
+      } catch (e) { /* ignore */ }
 
       // choose incorrect card
       let incorrect;
@@ -797,6 +826,7 @@
         else { updateScoreHeader(false); playFeedback(false); }
       };
 
+      // show existing streak stars
       for (let i = 0; i < streak; ++i) animateStarToProgressBarIndex(i);
     }
 
@@ -807,10 +837,13 @@
       playAudioQueued(src, onEnded);
     }
 
+    // playPromptVideo now prefers lastVideo (so Start repeats the same prompt). If lastVideo is missing it picks a random.
     function playPromptVideo() {
       if (gameWon || celebrationInProgress) return;
       const pending = standbyVideoEl.getAttribute('data-loaded-src');
-      let src = pending || pickRandomPromptVideo();
+      // prefer lastVideo if known, otherwise prefer preloaded pending, otherwise fall back to random.
+      let src = lastVideo || pending || pickRandomPromptVideo();
+      // ensure we don't leave stale attribute
       standbyVideoEl.removeAttribute('data-loaded-src');
 
       // When the prompt actually starts, hide the placeholder and show the noun card.
@@ -821,23 +854,17 @@
     }
 
     function playFeedback(isCorrect) {
-      // If correct, animate a big star while the "that's correct" video plays.
       if (gameWon || celebrationInProgress) return;
 
       if (isCorrect) {
-        // target marker index = current streak (we will increment streak after video ends)
         const targetIndex = streak;
-        // enqueue feedback video with an onStart that kicks off the flying-star animation
         playVideoQueued(feedbackVideos[0], function () {
-          // after video ends, update score and load next round
           updateScoreHeader(true);
           setTimeout(loadNewRound, 500);
         }, function onStart() {
-          // only start animation when the video actually starts playing
           flyStarFromNounToMarker(targetIndex);
         });
       } else {
-        // wrong answer -> play "better luck" video, no star animation
         playVideoQueued(feedbackVideos[1], function () {
           updateScoreHeader(false);
           setTimeout(loadNewRound, 500);
@@ -903,31 +930,16 @@
       activeVideoEl.classList.add('visible');
       standbyVideoEl.classList.remove('visible');
 
-      // show placeholder initially (noun hidden)
+      // show welcome placeholder initially (noun hidden)
       if (placeholderImg) placeholderImg.style.display = 'block';
       if (nounContainer) nounContainer.style.visibility = 'hidden';
 
       setupScoreHeader();
 
-      // If welcome has NOT been played (persisted), enqueue it to play once before the first round.
-      const welcomePlayed = (function(){
-        try { return localStorage.getItem(WELCOME_FLAG_KEY) === 'true'; } catch(e) { return false; }
-      })();
-
-      if (!welcomePlayed) {
-        // enqueue welcome as first media. When it ends, it will mark the flag and we'll load the first round.
-        // If the user interacts (or autoplay muted is allowed) it will play immediately; otherwise it waits for gesture.
-        playVideoQueued(welcomeVideo, function onWelcomeEnded(){
-          // after welcome ends we load the first round
-          loadNewRound();
-        }, function onWelcomeStart(){
-          // nothing extra here, playVideoSmooth already hides controls/noun for welcome
-        });
-        // Do not preload the prompt round now; it will be set up when loadNewRound runs after welcome ends.
-      } else {
-        // welcome already played in previous session -> just load the first round immediately
-        loadNewRound();
-      }
+      // Do NOT autoplay welcome here. Instead preload a prompt and wait for the user's first click.
+      // loadNewRound() sets lastVideo and preloads the prompt into standby so the first-click welcome
+      // can be followed immediately by the prompt playback.
+      loadNewRound();
     })();
   </script>
 </body>
