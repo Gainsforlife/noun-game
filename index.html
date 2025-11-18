@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Noun Game — Audio On Drag</title>
+  <title>Noun Game — Audio On Drag (No Overlap)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="only light">
   <style>
@@ -77,7 +77,11 @@ body {
       <div id="audio-cards"></div>
     </div>
   </div>
+
   <script>
+    // ------------------------------
+    // Data & configuration
+    // ------------------------------
     const streakLength = 5;
     const pointsGoal = 3;
     const nouns = [
@@ -97,14 +101,98 @@ body {
     ];
     const celebrationVideo = 'vid/greatjob.mp4';
     const feedbackVideos = ['vid/thatscorrect.mp4', 'vid/betterluck.mp4'];
-    // Preload all videos
-    const videoPreloads = [].concat(whatisthisVideos, [celebrationVideo], feedbackVideos);
-    videoPreloads.forEach(url => {
-      const v = document.createElement('video');
-      v.src = url; v.preload = 'auto'; v.muted = true;
-      v.style.display = 'none'; document.body.appendChild(v);
-    });
 
+    // ------------------------------
+    // Shared media queue & players
+    // Prevent audio/video overlap by queueing media requests.
+    // Behavior: any requested media (audio OR video) is enqueued. If nothing is playing it starts immediately.
+    // While playing, new requests wait in FIFO order. When current media ends, next item starts.
+    // Each queued item may include an onEnded callback that will be executed after the media finishes.
+    // ------------------------------
+    const promptVideo = document.getElementById('prompt-video');
+    const audioPlayer = new Audio();
+    audioPlayer.preload = 'auto';
+
+    let mediaQueue = []; // {type:'audio'|'video', src: string, onEnded: function|null}
+    let currentMedia = null; // same shape as queue item while playing
+
+    function enqueueMedia(item) {
+      // item: { type, src, onEnded }
+      if (!currentMedia) {
+        startMedia(item);
+      } else {
+        mediaQueue.push(item);
+      }
+    }
+
+    function startMedia(item) {
+      currentMedia = item || null;
+      if (!item) return;
+      if (item.type === 'audio') {
+        // start audio
+        audioPlayer.src = item.src;
+        audioPlayer.loop = false;
+        // remove previous handlers
+        audioPlayer.onended = () => {
+          if (typeof item.onEnded === 'function') {
+            try { item.onEnded(); } catch (e) { console.error(e); }
+          }
+          currentMedia = null;
+          // next item
+          const next = mediaQueue.shift();
+          if (next) startMedia(next);
+        };
+        audioPlayer.play().catch((err) => {
+          // If play is blocked (autoplay policy), we'll still treat it as ended so queued videos won't stall forever.
+          // But prefer to wait if it's user gesture. For simplicity, if it's blocked, call onEnded immediately.
+          console.warn('Audio play blocked or failed:', err);
+          audioPlayer.onended();
+        });
+      } else if (item.type === 'video') {
+        // start video on the promptVideo element
+        // Make sure previous handlers are removed
+        promptVideo.onended = null;
+        // set src and load
+        while (promptVideo.firstChild) promptVideo.removeChild(promptVideo.firstChild);
+        const src = document.createElement('source');
+        src.src = item.src;
+        src.type = 'video/mp4';
+        promptVideo.appendChild(src);
+        try { promptVideo.load(); } catch (e) {}
+        promptVideo.loop = false;
+        promptVideo.onended = () => {
+          if (typeof item.onEnded === 'function') {
+            try { item.onEnded(); } catch (e) { console.error(e); }
+          }
+          currentMedia = null;
+          const next = mediaQueue.shift();
+          if (next) startMedia(next);
+        };
+        // attempt play; if blocked, call onended so queue continues
+        promptVideo.play().catch((err) => {
+          console.warn('Video play blocked or failed:', err);
+          // If play is blocked, try to unmute if user interacted (optional), otherwise treat it as ended to avoid deadlocks.
+          if (typeof item.onEnded === 'function') {
+            try { item.onEnded(); } catch (e) { console.error(e); }
+          }
+          currentMedia = null;
+          const next = mediaQueue.shift();
+          if (next) startMedia(next);
+        });
+      }
+    }
+
+    // Convenience wrappers
+    function playAudioQueued(src, onEnded = null) {
+      enqueueMedia({ type: 'audio', src, onEnded });
+    }
+    function playVideoQueued(src, onEnded = null) {
+      enqueueMedia({ type: 'video', src, onEnded });
+    }
+
+    // ------------------------------
+    // Game state + UI
+    // ------------------------------
     let videoQueue = [];
     let lastVideo = null;
     let streak = 0;
@@ -123,7 +211,7 @@ body {
     }
     function getNextWhatisthisVideo() {
       if (videoQueue.length <= 1) {
-        videoQueue = shuffleArray(whatisthisVideos);
+        videoQueue = shuffleArray(whatisthisVideos.slice());
         if (videoQueue[0] === lastVideo && videoQueue.length > 1) {
           [videoQueue[0], videoQueue[1]] = [videoQueue[1], videoQueue[0]];
         }
@@ -131,6 +219,7 @@ body {
       lastVideo = videoQueue[0];
       return videoQueue.shift();
     }
+
     function setupScoreHeader() {
       const header = document.getElementById('score-header');
       header.innerHTML = '';
@@ -181,14 +270,11 @@ body {
       document.querySelector('.controls').classList.add('hide-celebration');
       document.getElementById('audio-cards').classList.add('hide-celebration');
       document.getElementById('noun-img-container').classList.add('hide-celebration');
-      const vid = document.getElementById('prompt-video');
-      vid.src = celebrationVideo;
-      vid.loop = false;
-      vid.play().catch(()=>{});
-      vid.onended = function() {
-        vid.onended = null;
+
+      // enqueue celebration video so it doesn't start until any current audio finishes
+      playVideoQueued(celebrationVideo, () => {
         setTimeout(() => { resetGame(); }, 400);
-      }
+      });
     }
     function updateScoreHeader(isCorrect) {
       if (gameWon || celebrationInProgress) return;
@@ -216,18 +302,24 @@ body {
       if (pointsCounter)
         pointsCounter.textContent = totalPoints;
     }
+
+    // ------------------------------
+    // Core game flow (use queued playback wrappers)
+    // ------------------------------
     function loadNewRound() {
       if (gameWon || celebrationInProgress) return;
       const noun = nouns[Math.floor(Math.random() * nouns.length)];
       document.getElementById('noun-img').src = noun.img;
       document.getElementById('noun-img').setAttribute('data-noun', noun.name);
-      const video = document.getElementById('prompt-video');
-      video.src = getNextWhatisthisVideo();
-      video.loop = false;
-      video.play().catch(()=>{});
+
+      // Request the next "whatisthis" video to play (queued)
+      const videoUrl = getNextWhatisthisVideo();
+      playVideoQueued(videoUrl, null); // no special onEnded logic for prompt video
+
       let incorrect;
       do { incorrect = nouns[Math.floor(Math.random() * nouns.length)]; }
       while (incorrect.name === noun.name);
+
       let audioCards = [
         { name: noun.name, audio: noun.audio, correct: true },
         { name: incorrect.name, audio: incorrect.audio, correct: false }
@@ -245,7 +337,8 @@ body {
           <button onclick="event.stopPropagation(); playAudio('${card.audio}')">🔈</button>`;
         div.addEventListener('dragstart', function(e){
           if (gameWon || celebrationInProgress) { e.preventDefault(); return; }
-          playAudio(card.audio); // PLAY ON DRAG!
+          // Play the audio but via the queued player to avoid overlap:
+          playAudio(card.audio);
           e.dataTransfer.setData('text/plain', card.correct);
           div.classList.add('dragging');
         });
@@ -263,33 +356,38 @@ body {
       };
       for (let i = 0; i < streak; ++i) animateStarToProgressBar(i);
     }
-    function playAudio(audioPath) {
+
+    // ------------------------------
+    // Public play helpers used in UI
+    // These call the queued versions to ensure no overlapping.
+    // ------------------------------
+    function playAudio(src, onEnded = null) {
       if (gameWon || celebrationInProgress) return;
-      const audio = new Audio(audioPath);
-      audio.play();
+      playAudioQueued(src, onEnded);
     }
     function playPromptVideo() {
       if (gameWon || celebrationInProgress) return;
-      const vid = document.getElementById('prompt-video');
-      vid.currentTime = 0;
-      vid.play();
+      // replay the currently loaded prompt video, if any, via the queue.
+      // If promptVideo currently has a source and nothing is playing, we can start it;
+      // otherwise, enqueue it so it plays after current media.
+      // We prefer to use the src from the <source> element if present.
+      const sourceEl = promptVideo.querySelector('source');
+      const src = sourceEl ? sourceEl.src : getNextWhatisthisVideo();
+      playVideoQueued(src, null);
     }
     function playFeedback(isCorrect) {
       if (gameWon || celebrationInProgress) return;
-      const promptVideo = document.getElementById('prompt-video');
-      promptVideo.src = isCorrect ? feedbackVideos[0] : feedbackVideos[1];
-      promptVideo.loop = false;
-      promptVideo.onended = null;
-      promptVideo.onended = function() {
-        if (!gameWon && !celebrationInProgress) {
-          promptVideo.onended = null;
-          if (isCorrect) updateScoreHeader(true);
-          setTimeout(loadNewRound, 500);
-        }
-      };
-      promptVideo.play().catch(()=>{});
+      const videoSrc = isCorrect ? feedbackVideos[0] : feedbackVideos[1];
+      // Play the feedback video via the queue and run scoring logic after it ends.
+      playVideoQueued(videoSrc, function() {
+        if (isCorrect) updateScoreHeader(true);
+        setTimeout(loadNewRound, 500);
+      });
     }
-    // TOUCH DRAG SUPPORT WITH DRAG CLONE + PLAY AUDIO ON DRAG
+
+    // ------------------------------
+    // Touch drag support (play audio via queue to avoid overlap)
+    // ------------------------------
     let touchItem = null;
     let dragClone = null;
     document.addEventListener('touchstart', function(e) {
@@ -297,7 +395,8 @@ body {
       if (card && !(gameWon || celebrationInProgress)) {
         touchItem = card;
         card.classList.add('touching');
-        playAudio(card.getAttribute('data-audio')); // PLAY ON DRAG!
+        // Play audio via queued player (it will wait for any playing video to finish)
+        playAudio(card.getAttribute('data-audio'));
         dragClone = card.cloneNode(true);
         dragClone.className = "audio-card drag-clone";
         dragClone.style.width = card.offsetWidth + "px";
@@ -334,8 +433,36 @@ body {
       if (touchItem) touchItem.classList.remove('touching');
       touchItem = null;
     },{passive:false});
-    setupScoreHeader();
-    loadNewRound();
+
+    // ------------------------------
+    // Init: setup UI and pre-build video queue
+    // ------------------------------
+    function buildVideoQueue() {
+      videoQueue = shuffleArray(whatisthisVideos.slice());
+      if (videoQueue[0] === lastVideo && videoQueue.length > 1) {
+        [videoQueue[0], videoQueue[1]] = [videoQueue[1], videoQueue[0]];
+      }
+    }
+
+    (function init() {
+      setupScoreHeader();
+      buildVideoQueue();
+      // Optionally prefetch the feedback & celebration clips by creating a muted audio/video
+      // This is not required for the queue logic, but can help reduce perceived latency.
+      // keep it small and conservative.
+      try {
+        if (!(navigator.connection && navigator.connection.saveData)) {
+          const pre1 = document.createElement('link');
+          pre1.rel = 'preload'; pre1.as = 'video'; pre1.href = feedbackVideos[0]; pre1.type = 'video/mp4';
+          document.head.appendChild(pre1);
+          const pre2 = document.createElement('link');
+          pre2.rel = 'preload'; pre2.as = 'video'; pre2.href = feedbackVideos[1]; pre2.type = 'video/mp4';
+          document.head.appendChild(pre2);
+        }
+      } catch (e) { /* ignore */ }
+
+      loadNewRound();
+    })();
   </script>
 </body>
 </html>
