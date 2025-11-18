@@ -63,7 +63,11 @@
     .game-content{ width:100%; display:flex; justify-content:center; }
     #content-wrapper{ width:100%; display:flex; flex-direction:column; gap:var(--section-vertical-gap); align-items:center; }
 
-    /* Video + noun wrapper */
+    /* Video + noun wrapper
+       NOTE: ensure the .video-wrapper reserves space in the layout so controls below it stay below.
+       Use aspect-ratio (modern browsers) and fallback min-height so the absolutely positioned
+       videos don't collapse the wrapper to zero height and overlap the controls.
+    */
     #video-section{ width:100%; display:flex; flex-direction:column; align-items:center; gap:var(--section-vertical-gap); position:relative; }
     .video-wrapper{
       width:100%;
@@ -73,23 +77,47 @@
       box-sizing:border-box;
       padding: 0;
       cursor:pointer;
-    }
-    #prompt-video{
-      width:100%;
-      max-height:60vh;
-      object-fit:contain;
+      background: transparent; /* ensure transparent to avoid black background */
       border-radius:12px;
-      background:#000;
-      display:block;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+      overflow:visible;
+
+      /* Reserve space so the absolutely-positioned video(s) don't overlap following content */
+      aspect-ratio: 16 / 9; /* modern browsers */
+      min-height: 220px;    /* fallback for older browsers */
     }
 
-    /* Noun card absolutely positioned over the video-wrapper so it always overlaps the video. */
+    /* Two stacked videos for smooth crossfades */
+    .prompt-video {
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      border-radius:12px;
+      background: transparent; /* avoid black background when swapping sources */
+      display:block;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+      position:absolute; /* stack inside wrapper but wrapper now reserves height */
+      left:0;
+      top:0;
+      transition: opacity 260ms cubic-bezier(.22,.9,.3,1);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      will-change: opacity;
+      opacity:0;
+      pointer-events:none;
+      z-index:2; /* behind noun image and above page background */
+    }
+
+    /* the "visible" video is interactive */
+    .prompt-video.visible { opacity:1; pointer-events:auto; }
+
+    /* Noun card absolutely positioned over the video-wrapper so it always overlaps the video.
+       Keep it above videos with a higher z-index so it remains interactive.
+    */
     #noun-img-container{
       position:absolute;
       top: 6%;
       right: 6%;
-      z-index: 5;
+      z-index: 6; /* above videos */
       width: 36vw;
       max-width: 260px;
       pointer-events: auto;
@@ -110,7 +138,9 @@
       box-shadow: 0 14px 36px rgba(0,0,0,0.12);
     }
 
-    /* Controls + audio cards group that always sits BELOW the video (stacked vertically) */
+    /* Controls + audio cards group that always sits BELOW the video (stacked vertically)
+       Make sure these have a lower z-index than the video wrapper so they appear visually below.
+    */
     .bottom-controls {
       width:100%;
       max-width: 980px;
@@ -119,7 +149,9 @@
       align-items:center;
       gap: var(--card-gap);
       padding: .75rem 0;
-      box-sizing: border-box;
+      box-sizing:border-box;
+      z-index:1; /* ensure below videos and noun image */
+      position:relative; /* normal flow under .video-wrapper */
     }
     .controls { width:100%; display:flex; justify-content:center; align-items:center; padding:0; gap:.75rem; }
     .btn-replay{
@@ -146,6 +178,7 @@
       flex-wrap:wrap;
       padding: .4rem 0;
       box-sizing:border-box;
+      z-index:1;
     }
     .audio-card{
       display:flex;
@@ -200,8 +233,8 @@
 
     /* Desktop adjustments */
     @media (min-width:900px){
-      .video-wrapper{ max-width: 1100px; }
-      #prompt-video{ max-height:72vh; border-radius:16px; }
+      .video-wrapper{ max-width: 1100px; aspect-ratio: 16/9; }
+      .prompt-video{ max-height:72vh; border-radius:16px; }
       #noun-img-container{
         top: 10%;
         right: 6%;
@@ -237,8 +270,10 @@
 
           <div id="video-section">
             <div class="video-wrapper" id="video-wrapper" aria-hidden="false" title="Click to play with sound">
-              <!-- prompt-video prepared by JS; plays after user click -->
-              <video id="prompt-video" playsinline preload="metadata"></video>
+              <!-- Two stacked videos for crossfading to avoid black flashes -->
+              <video id="prompt-video-a" class="prompt-video" playsinline preload="metadata" ></video>
+              <video id="prompt-video-b" class="prompt-video" playsinline preload="metadata" ></video>
+
               <div id="noun-img-container">
                 <img id="noun-img" class="noun-img" src="" alt="noun">
               </div>
@@ -276,8 +311,16 @@
     const feedbackVideos = ['vid/thatscorrect.mp4', 'vid/betterluck.mp4'];
     const STAR_SRC = 'img/star.png'; // user-provided star image used for progress and animation
 
-    /* ---------- STATE / MEDIA PLAYBACK ---------- */
-    const promptVideo = document.getElementById('prompt-video');
+    /* ---------- STATE / MEDIA PLAYBACK (with double-buffered video to avoid black flash) ---------- */
+    const videoA = document.getElementById('prompt-video-a');
+    const videoB = document.getElementById('prompt-video-b');
+    videoA.muted = true;
+    videoB.muted = true;
+
+    // The video element currently visible/active and the standby element we prepare next media on.
+    let activeVideoEl = videoA;
+    let standbyVideoEl = videoB;
+
     const audioPlayer = new Audio();
     audioPlayer.preload = 'auto';
 
@@ -288,12 +331,11 @@
     function setUserInteracted() {
       if (userInteracted) return;
       userInteracted = true;
-      try { audioPlayer.muted = false; promptVideo.muted = false; } catch(e){}
+      try { audioPlayer.muted = false; videoA.muted = false; videoB.muted = false; } catch(e){}
       if (!currentMedia) {
         const next = mediaQueue.shift();
         if (next) startMedia(next);
       }
-      // optionally visually show audio enabled (left as future enhancement)
     }
 
     // attach gesture handlers to start button and video-wrapper
@@ -313,6 +355,94 @@
       else mediaQueue.push(item);
     }
 
+    /* Smooth video playback using two elements and crossfade.
+       We never remove or swap <source> nodes while the visible video is being removed.
+       Instead we load the next src into the standby element, wait for it to be ready to play,
+       start it, crossfade by toggling CSS classes, then pause the old element and swap references.
+    */
+    const CROSSFADE_DURATION = 260; // should match CSS transition
+
+    function playVideoSmooth(src, onEnded = null, onStart = null) {
+      const playEl = standbyVideoEl;
+      const prevEl = activeVideoEl;
+
+      // Clean up previous handlers on playEl
+      playEl.oncanplay = null;
+      playEl.onplaying = null;
+      playEl.onended = null;
+      playEl.onerror = null;
+
+      // set src and prepare
+      if (playEl.getAttribute('data-loaded-src') !== src) {
+        try {
+          playEl.pause();
+        } catch(e){}
+        playEl.removeAttribute('src');
+        playEl.load && playEl.load();
+        playEl.src = src;
+        playEl.setAttribute('data-loaded-src', src);
+        try { playEl.load(); } catch (e) {}
+      }
+
+      // ensure mute state follows user gesture
+      playEl.muted = !userInteracted;
+
+      // attach handlers
+      const started = () => {
+        if (typeof onStart === 'function') {
+          try { onStart(); } catch(e){ console.error(e); }
+        }
+      };
+
+      playEl.onplaying = started;
+
+      playEl.onended = () => {
+        if (typeof onEnded === 'function') {
+          try { onEnded(); } catch(e){ console.error(e); }
+        }
+        currentMedia = null;
+        const next = mediaQueue.shift();
+        if (next) startMedia(next);
+      };
+
+      const startWhenReady = () => {
+        try { playEl.currentTime = 0; } catch(e){}
+        const p = playEl.play();
+        if (p && typeof p.then === 'function') {
+          p.then(() => {
+            playEl.classList.add('visible');
+            prevEl.classList.remove('visible');
+
+            setTimeout(() => {
+              try { prevEl.pause(); } catch(e){}
+              standbyVideoEl = prevEl;
+              activeVideoEl = playEl;
+            }, CROSSFADE_DURATION + 20);
+          }).catch(err => {
+            console.warn('Video play blocked or failed:', err);
+            playEl.onended && playEl.onended();
+          });
+        } else {
+          playEl.classList.add('visible');
+          prevEl.classList.remove('visible');
+          setTimeout(() => {
+            try { prevEl.pause(); } catch(e){}
+            standbyVideoEl = prevEl;
+            activeVideoEl = playEl;
+          }, CROSSFADE_DURATION + 20);
+        }
+      };
+
+      if (playEl.readyState >= 3) startWhenReady();
+      else {
+        const onCanPlay = () => {
+          playEl.removeEventListener('canplay', onCanPlay);
+          startWhenReady();
+        };
+        playEl.addEventListener('canplay', onCanPlay);
+      }
+    }
+
     function startMedia(item) {
       currentMedia = item;
       if (!item) return;
@@ -325,45 +455,13 @@
           const next = mediaQueue.shift();
           if (next) startMedia(next);
         };
-        // respect userInteracted for muting
         audioPlayer.muted = !userInteracted;
-        // audio.start
         audioPlayer.play().catch(err => {
           console.warn('Audio play blocked or failed:', err);
           audioPlayer.onended && audioPlayer.onended();
         });
       } else if (item.type === 'video') {
-        // set video source
-        while (promptVideo.firstChild) promptVideo.removeChild(promptVideo.firstChild);
-        const srcEl = document.createElement('source');
-        srcEl.src = item.src;
-        srcEl.type = 'video/mp4';
-        promptVideo.appendChild(srcEl);
-        try { promptVideo.load(); } catch(e){}
-        promptVideo.loop = false;
-
-        // if an onStart callback exists, call it when the video actually starts playing
-        if (typeof item.onStart === 'function') {
-          const started = () => {
-            try { item.onStart(); } catch (err) { console.error(err); }
-          };
-          promptVideo.addEventListener('playing', started, { once: true });
-        }
-
-        promptVideo.onended = () => {
-          if (typeof item.onEnded === 'function') try { item.onEnded(); } catch(e){console.error(e);}
-          currentMedia = null;
-          const next = mediaQueue.shift();
-          if (next) startMedia(next);
-        };
-
-        // respect userInteracted for muting
-        promptVideo.muted = !userInteracted;
-        promptVideo.play().catch(err => {
-          console.warn('Video play blocked or failed:', err);
-          // avoid deadlock: call onEnded if play failed
-          promptVideo.onended && promptVideo.onended();
-        });
+        playVideoSmooth(item.src, item.onEnded, item.onStart);
       }
     }
 
@@ -395,7 +493,6 @@
       for (let i = 0; i < streakLength; i++) {
         const div = document.createElement('div');
         div.className = 'score-marker';
-        // empty visual (small star placeholder)
         div.innerHTML = '<span class="star-empty">⭐</span>';
         header.appendChild(div);
         scoreMarkers.push(div);
@@ -409,7 +506,6 @@
     }
 
     function animateStarToProgressBarIndex(targetIndex) {
-      // fallback immediate static fill (if no animation in progress)
       if (!scoreMarkers[targetIndex]) return;
       scoreMarkers[targetIndex].innerHTML = `<img src="${STAR_SRC}" class="small-star" alt="star">`;
     }
@@ -432,10 +528,7 @@
     function updateScoreHeader(isCorrect) {
       if (gameWon || celebrationInProgress) return;
       if (isCorrect) {
-        // increment streak and set visual - the animated star already landed on the marker,
-        // this ensures internal state updates and handles streak completion logic.
         streak++;
-        // ensure UI shows star (idempotent)
         if (streak - 1 >= 0) animateStarToProgressBarIndex(streak - 1);
 
         if (streak === streakLength) {
@@ -451,7 +544,6 @@
         }
       } else {
         if (streak > 0) {
-          // remove last filled star
           for (let i = scoreMarkers.length - 1; i >= 0; i--) {
             const marker = scoreMarkers[i];
             if (marker.innerHTML.trim() !== '') {
@@ -470,8 +562,6 @@
     }
 
     /* ---------- STAR FLY ANIMATION ---------- */
-    // create and animate a large star from the center of the noun image to the center of the
-    // target progress marker index. Add sparkles while moving.
     function flyStarFromNounToMarker(targetIndex, doneCallback) {
       const nounImg = document.getElementById('noun-img');
       const marker = scoreMarkers[targetIndex];
@@ -480,67 +570,52 @@
         return;
       }
 
-      // compute start center (noun image center)
       const nounRect = nounImg.getBoundingClientRect();
       const startX = nounRect.left + nounRect.width / 2;
       const startY = nounRect.top + nounRect.height / 2;
 
-      // compute target center (marker center)
       const markerRect = marker.getBoundingClientRect();
       const targetX = markerRect.left + markerRect.width / 2;
       const targetY = markerRect.top + markerRect.height / 2;
 
-      // choose star size (big on desktop, scaled on smaller screens)
       const maxSize = Math.min(320, Math.max(120, nounRect.width * 0.9));
       const starSize = Math.round(maxSize);
 
-      // create flying star element
       const star = document.createElement('div');
       star.className = 'flying-star';
       star.style.width = star.style.height = starSize + 'px';
-      // position it centered on noun image
       star.style.left = (startX - starSize / 2) + 'px';
       star.style.top = (startY - starSize / 2) + 'px';
       star.style.transform = 'scale(1.15) rotate(0deg)';
       star.style.opacity = '1';
 
-      // add a few sparkles inside the star (random positions)
       const sparks = [];
       const sparkCount = 6;
       for (let i = 0; i < sparkCount; i++) {
         const s = document.createElement('div');
         s.className = 'spark';
-        // randomize initial position within star
-        const rx = Math.round((Math.random() * 60) + 10); // px offset
+        const rx = Math.round((Math.random() * 60) + 10);
         const ry = Math.round((Math.random() * 60) + 10);
         s.style.left = rx + 'px';
         s.style.top = ry + 'px';
-        // stagger animation delay a little
         s.style.animationDelay = (i * 110) + 'ms';
         star.appendChild(s);
         sparks.push(s);
       }
 
       document.body.appendChild(star);
-
-      // force reflow so transition will animate
       star.getBoundingClientRect();
 
-      // start movement to target after a tiny delay to let any video 'playing' event sync up visually
-      const moveDelay = 150; // ms
+      const moveDelay = 150;
       setTimeout(() => {
-        // move star to target center; shrink while moving
         star.style.left = (targetX - starSize * 0.28) + 'px';
         star.style.top = (targetY - starSize * 0.28) + 'px';
         star.style.transform = 'scale(0.36) rotate(25deg)';
         star.style.opacity = '0.95';
       }, moveDelay);
 
-      // when transition finishes, remove the star and set the progress marker image
       const cleanup = () => {
-        // fill the progress marker with the small star image
         if (scoreMarkers[targetIndex]) scoreMarkers[targetIndex].innerHTML = `<img src="${STAR_SRC}" class="small-star" alt="star">`;
-        // small fade-out
         star.style.transition = 'opacity .25s ease';
         star.style.opacity = '0';
         setTimeout(() => {
@@ -549,7 +624,6 @@
         }, 300);
       };
 
-      // listen for end: transitionend on left or top
       let onTransitionEnd = (ev) => {
         if (ev.propertyName === 'left' || ev.propertyName === 'top') {
           star.removeEventListener('transitionend', onTransitionEnd);
@@ -558,7 +632,6 @@
       };
       star.addEventListener('transitionend', onTransitionEnd);
 
-      // safety timeout in case transitionend doesn't fire
       setTimeout(() => {
         if (document.body.contains(star)) {
           cleanup();
@@ -578,19 +651,20 @@
       document.getElementById('noun-img').src = noun.img;
       document.getElementById('noun-img').setAttribute('data-noun', noun.name);
 
-      // Randomly pick one of the "what is this?" variations for this round
       const videoUrl = pickRandomPromptVideo();
       lastVideo = videoUrl;
 
-      // If user has interacted already, enqueue the prompt to play. Otherwise prepare metadata/frame.
+      // If user has interacted already, enqueue the prompt to play. Otherwise prepare metadata/frame on standby
       if (userInteracted) {
         playVideoQueued(videoUrl, null);
       } else {
-        promptVideo.dataset.pendingSrc = videoUrl;
-        while (promptVideo.firstChild) promptVideo.removeChild(promptVideo.firstChild);
-        const s = document.createElement('source'); s.src = videoUrl; s.type = 'video/mp4';
-        promptVideo.appendChild(s);
-        try { promptVideo.load(); } catch (e) {}
+        try {
+          standbyVideoEl.pause();
+          standbyVideoEl.removeAttribute('src');
+          standbyVideoEl.src = videoUrl;
+          standbyVideoEl.setAttribute('data-loaded-src', videoUrl);
+          standbyVideoEl.load && standbyVideoEl.load();
+        } catch (e) { /* ignore */ }
       }
 
       // choose incorrect card
@@ -646,30 +720,24 @@
 
     function playPromptVideo() {
       if (gameWon || celebrationInProgress) return;
-      const pending = promptVideo.dataset.pendingSrc;
+      const pending = standbyVideoEl.getAttribute('data-loaded-src');
       let src = pending || pickRandomPromptVideo();
-      delete promptVideo.dataset.pendingSrc;
+      standbyVideoEl.removeAttribute('data-loaded-src');
       playVideoQueued(src, null);
     }
 
     function playFeedback(isCorrect) {
-      // If correct, animate a big star while the "that's correct" video plays.
       if (gameWon || celebrationInProgress) return;
 
       if (isCorrect) {
-        // target marker index = current streak (we will increment streak after video ends)
         const targetIndex = streak;
-        // enqueue feedback video with an onStart that kicks off the flying-star animation
         playVideoQueued(feedbackVideos[0], function () {
-          // after video ends, update score and load next round
           updateScoreHeader(true);
           setTimeout(loadNewRound, 500);
         }, function onStart() {
-          // only start animation when the video actually starts playing
           flyStarFromNounToMarker(targetIndex);
         });
       } else {
-        // wrong answer -> play "better luck" video, no star animation
         playVideoQueued(feedbackVideos[1], function () {
           updateScoreHeader(false);
           setTimeout(loadNewRound, 500);
@@ -726,9 +794,13 @@
 
     /* ---------- INIT ---------- */
     (function init(){
-      // start muted until user interacts; setUserInteracted() will unmute
       audioPlayer.muted = true;
-      promptVideo.muted = true;
+      videoA.muted = true;
+      videoB.muted = true;
+
+      // ensure initial visual state: make active visible (even though it has no src yet)
+      activeVideoEl.classList.add('visible');
+      standbyVideoEl.classList.remove('visible');
 
       setupScoreHeader();
       loadNewRound();
