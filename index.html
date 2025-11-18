@@ -3,21 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <title>Noun Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     html, body {
-      margin: 0; padding: 0; box-sizing: border-box;
-    }
-    body {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
     }
     .app-wrapper {
       background: white;
       border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       max-width: 900px;
       width: 100%;
       padding: 40px;
@@ -33,12 +36,12 @@
       border-bottom: 3px solid #667eea;
       padding-bottom: 20px;
       flex-shrink: 0;
+      width: 100%;
     }
     .app-header h1 {
       font-size: 32px;
       color: #333;
       margin-bottom: 5px;
-      font-weight: bold;
     }
     .app-header p {
       color: #666;
@@ -57,105 +60,101 @@
     .score-marker {
       width: 70px;
       height: 70px;
-      border-radius: 16px;
-      border: 3px solid #ffed47;
-      background: #fffbe8;
-      box-shadow: 0 2px 8px rgba(255,220,50,0.15);
+      border-radius: 14px;
+      background: #f9fafb;
+      border: 3px solid #ffa600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 700;
+      color: #333;
+      box-shadow: 0 2px 12px rgba(255, 166, 0, 0.11);
     }
     .points-display {
-      background: #4f8cff;
-      color: white;
-      border-radius: 16px;
-      padding: 10px 18px;
-      font-size: 26px;
-      box-shadow: 0 2px 8px rgba(50, 160, 255, 0.13);
-      font-weight: bold;
+      background: #667eea;
+      color: #fff;
+      border-radius: 10px;
+      padding: 12px 32px;
+      font-size: 32px;
+      font-weight: 700;
+      box-shadow: 0 2px 12px rgba(102, 126, 234, 0.11);
     }
     .game-content {
-      margin: 0 auto;
       padding: 32px;
       display: flex;
       flex-direction: column;
       align-items: center;
       width: 100%;
-      box-sizing: border-box;
-      position: relative;
     }
     .noun-img {
-      width: 170px;
-      height: 170px;
-      border-radius: 20px;
-      border: 5px solid #f9a825;
-      margin: 20px 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      background: #fffbe8;
-      box-shadow: 0 2px 12px rgba(255,220,50,0.08);
-    }
-    .noun-img img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
+      width: 180px;
       border-radius: 18px;
-    }
-    .question-character {
-      width: 120px;
-      margin-bottom: 10px;
-    }
-    .audio-cards {
-      display: flex;
-      gap: 24px;
-      margin: 28px 0;
-      width: 100%;
-      justify-content: center;
+      background: #fff4e6;
+      padding: 10px;
+      margin-bottom: 28px;
+      object-fit: contain;
+      box-shadow: 0 4px 16px rgba(255, 166, 0, 0.12);
     }
     .audio-card {
-      min-width: 100px;
-      background: #eef6ff;
-      border-radius: 11px;
-      border: 3px solid #4f8cff;
-      color: #222;
-      font-size: 18px;
-      padding: 22px 14px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(80,180,255,0.13);
+      background: #f5f5fe;
+      border-radius: 16px;
+      min-width: 220px;
+      font-size: 22px;
+      font-weight: 700;
+      color: #333;
+      margin: 18px 9px;
+      padding: 18px 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       cursor: pointer;
-      touch-action: manipulation;
-      position: relative;
-      z-index: 1;
-      transition: box-shadow 0.18s;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.09);
+      transition: background 0.2s, color 0.2s, transform 0.2s;
     }
-    .audio-card:active {
-      box-shadow: 0 6px 22px rgba(80,180,255,0.18);
+    .audio-card:active,
+    .audio-card.active {
+      background: #ffd75f;
+      color: #222;
+      transform: scale(1.05);
     }
     .audio-card button {
-      background: transparent;
+      background: #667eea;
+      color: white;
       border: none;
-      font-size: 22px;
-      color: #0057b7;
-      margin-top: 11px;
+      border-radius: 8px;
+      margin-left: 12px;
+      padding: 7px 13px;
+      font-size: 20px;
       cursor: pointer;
+      transition: background 0.2s;
+    }
+    .audio-card button:active {
+      background: #764ba2;
     }
     .btn-replay {
-      background: #4f8cff;
-      color: #fff;
-      margin: 23px auto 0 auto;
-      padding: 14px 27px;
-      border: none;
-      border-radius: 12px;
-      font-size: 18px;
-      font-weight: bold;
-      box-shadow: 0 2px 8px rgba(50, 160, 255, 0.13);
-      cursor: pointer;
       display: block;
+      margin: 32px auto 0 auto;
+      padding: 14px 32px;
+      font-size: 22px;
+      font-weight: 700;
+      background: #ffd75f;
+      color: #222;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(255,215,95,0.21);
+      transition: background 0.15s;
     }
-    /* -------- MOBILE DESIGN -------- */
+    .btn-replay:active {
+      background: #ffe02e;
+    }
+
+    /* Mobile optimizations */
     @media (max-width: 600px) {
-      body {
+      html, body {
+        padding: 3vw !important;
         background: linear-gradient(135deg, #b2f5ea 0%, #f0fff4 100%) !important;
-        padding: 6vw !important;
       }
       .app-wrapper {
         padding: 5vw !important;
@@ -173,35 +172,35 @@
         color: #555 !important;
       }
       .score-marker {
-        width: 12vw !important; height: 12vw !important;
+        width: 14vw !important;
+        height: 14vw !important;
+        font-size: 6vw !important;
       }
       .points-display {
         padding: 4vw 7vw !important;
-        font-size: 5vw !important;
+        font-size: 6vw !important;
       }
       .audio-card {
-        min-width: 33vw !important;
+        min-width: 45vw !important;
         font-size: 5vw !important;
         padding: 4vw 2vw !important;
       }
       .audio-card button {
-        width: 12vw !important; height: 12vw !important;
-        font-size: 8vw !important;
+        font-size: 7vw !important;
+        min-width: 12vw !important;
+        min-height: 12vw !important;
       }
       .btn-replay {
-        padding: 5vw 7vw !important;
+        padding: 5vw 10vw !important;
         font-size: 5vw !important;
       }
       .game-content {
-        padding: 4vw !important;
+        padding: 5vw !important;
+        width: 100vw !important;
       }
       .noun-img {
-        width: 30vw !important;
+        width: 48vw !important;
         padding: 3vw !important;
-        height: 30vw !important;
-      }
-      .question-character {
-        width: 26vw !important;
       }
     }
   </style>
@@ -217,91 +216,427 @@
       <div class="points-display" id="points">0</div>
     </div>
     <div class="game-content">
-      <img class="question-character" src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Ultraman" alt="character" />
-      <div class="noun-img drop-zone" id="noun-img">
-        <img src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80" alt="plane" />
+      <img src="your_image_source.png" alt="noun" class="noun-img">
+      <div class="audio-card" draggable="true">
+        BAT
+        <button>🔉</button>
       </div>
-      <button class="btn-replay">🔊 REPLAY VIDEO</button>
-      <div class="audio-cards">
-        <div class="audio-card" data-word="bat">
-          BAT<br/><button>🔈</button>
-        </div>
-        <div class="audio-card" data-word="plane">
-          PLANE<br/><button>🔈</button>
-        </div>
+      <div class="audio-card" draggable="true">
+        PLANE
+        <button>🔉</button>
       </div>
+      <button class="btn-replay">REPLAY VIDEO</button>
     </div>
-  </div>
+
   <script>
-    // ===== Mobile Drag & Drop Support =====
+    // Nouns array
+    const nouns = [
+      { name: 'butterfly', img: 'img/Butterfly.png', audio: 'audio/butterfly.mp3' },
+      { name: 'duck', img: 'img/duck.png', audio: 'audio/duck.mp3' },
+      { name: 'turtle', img: 'img/turtle.png', audio: 'audio/turtle.mp3' },
+      { name: 'frog', img: 'img/frog.png', audio: 'audio/frog.mp3' },
+      { name: 'dolphin', img: 'img/dolphin.png', audio: 'audio/dolphin.mp3' },
+      { name: 'fish', img: 'img/fish.png', audio: 'audio/fish.mp3' },
+      { name: 'bee', img: 'img/bee.png', audio: 'audio/bee.mp3' },
+      { name: 'plane', img: 'img/plane.png', audio: 'audio/plane.mp3' },
+      { name: 'bat', img: 'img/bat.png', audio: 'audio/bat.mp3' },
+      { name: 'bird', img: 'img/bird.png', audio: 'audio/bird.mp3' }
+    ];
 
-    function enableMobileDragAndDrop() {
-      const audioCards = document.querySelectorAll('.audio-card');
-      const dropTargets = document.querySelectorAll('.drop-zone');
-      
-      audioCards.forEach(card => {
-        let offsetX = 0, offsetY = 0, initialX = 0, initialY = 0;
-        
-        card.addEventListener('touchstart', function(e) {
-          const touch = e.touches[0];
-          initialX = card.offsetLeft;
-          initialY = card.offsetTop;
-          offsetX = touch.clientX - initialX;
-          offsetY = touch.clientY - initialY;
-          card.style.position = 'absolute';
-          card.style.zIndex = 1000;
-          card.style.transition = 'none';
-          document.body.appendChild(card);
-        });
-        
-        card.addEventListener('touchmove', function(e) {
-          const touch = e.touches[0];
-          card.style.left = (touch.clientX - offsetX) + 'px';
-          card.style.top = (touch.clientY - offsetY) + 'px';
-          e.preventDefault();
-        });
-        
-        card.addEventListener('touchend', function(e) {
-          const cardRect = card.getBoundingClientRect();
-          let dropped = false;
-          dropTargets.forEach(zone => {
-            const zoneRect = zone.getBoundingClientRect();
-            if (
-              cardRect.left < zoneRect.right &&
-              cardRect.right > zoneRect.left &&
-              cardRect.top < zoneRect.bottom &&
-              cardRect.bottom > zoneRect.top
-            ) {
-              // Card dropped on target
-              dropped = true;
-              card.style.left = zoneRect.left + 'px';
-              card.style.top = zoneRect.top + 'px';
-              // Example logic: increment points if correct
-              if (card.dataset.word === 'plane') {
-                document.getElementById('points').textContent = 1;
-              } else {
-                document.getElementById('points').textContent = 0;
-              }
-            }
-          });
-          if (!dropped) {
-            card.style.position = '';
-            card.style.left = '';
-            card.style.top = '';
-            card.style.zIndex = '';
-            card.style.transition = '';
-          }
-        });
-      });
-    }
-
-    // Enable on phone only:
-    if (window.matchMedia("(max-width: 600px)").matches) {
-      enableMobileDragAndDrop();
-    }
+    // Video shuffle array
+    const whatisthisVideos = [
+      'vid/whatisthis.mp4',
+      'vid/whatisthis1.mp4',
+      'vid/whatisthis2.mp4'
+    ];
     
-    // ===== (Optional) Desktop Drag & Drop =====
-    // Add your desktop drag events here if needed
+    let videoQueue = [];
+    let lastVideo = null;
+    
+    const streakLength = 1;
+    const pointsGoal = 1;
+    let streak = 0;
+    let totalPoints = 0;
+    let scoreMarkers = [];
+    let gameWon = false;
+    let celebrationInProgress = false;
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function getNextWhatisthisVideo() {
+      if (videoQueue.length <= 1) {
+        videoQueue = shuffleArray(whatisthisVideos);
+        if (videoQueue[0] === lastVideo && videoQueue.length > 1) {
+          [videoQueue[0], videoQueue[1]] = [videoQueue[1], videoQueue[0]];
+        }
+      }
+      
+      lastVideo = videoQueue[0];
+      return videoQueue.shift();
+    }
+
+    function setupScoreHeader() {
+      const header = document.getElementById('score-header');
+      header.innerHTML = '';
+      scoreMarkers = [];
+      for (let i = 0; i < streakLength; i++) {
+        const div = document.createElement('div');
+        div.className = 'score-marker';
+        div.innerHTML = '';
+        header.appendChild(div);
+        scoreMarkers.push(div);
+      }
+      
+      const pointsDiv = document.createElement('div');
+      pointsDiv.className = 'points-display';
+      pointsDiv.innerHTML = `<div class="points-label">Points</div><div class="points-value" id="points-counter">0</div>`;
+      header.appendChild(pointsDiv);
+      
+      const pointsCounter = document.getElementById('points-counter');
+      pointsCounter.textContent = totalPoints;
+    }
+
+    function animateStarToProgressBar(targetMarkerIndex) {
+      const nounImg = document.getElementById('noun-img');
+      const nounRect = nounImg.getBoundingClientRect();
+      const startX = nounRect.left + nounRect.width / 2;
+      const startY = nounRect.top + nounRect.height / 2;
+      
+      const targetMarker = scoreMarkers[targetMarkerIndex];
+      const targetRect = targetMarker.getBoundingClientRect();
+      const endX = targetRect.left + targetRect.width / 2;
+      const endY = targetRect.top + targetRect.height / 2;
+      
+      const tx = endX - startX;
+      const ty = endY - startY;
+      
+      const flyingStar = document.createElement('div');
+      flyingStar.className = 'flying-star';
+      flyingStar.textContent = '⭐';
+      flyingStar.style.left = startX + 'px';
+      flyingStar.style.top = startY + 'px';
+      flyingStar.style.setProperty('--tx', tx + 'px');
+      flyingStar.style.setProperty('--ty', ty + 'px');
+      document.body.appendChild(flyingStar);
+      
+      for (let i = 0; i < 8; i++) {
+        setTimeout(() => {
+          const sparkle = document.createElement('div');
+          sparkle.className = 'sparkle';
+          sparkle.textContent = '✨';
+          const progress = i / 8;
+          sparkle.style.left = (startX + tx * progress) + 'px';
+          sparkle.style.top = (startY + ty * progress) + 'px';
+          document.body.appendChild(sparkle);
+          
+          setTimeout(() => sparkle.remove(), 600);
+        }, i * 75);
+      }
+      
+      setTimeout(() => flyingStar.remove(), 1200);
+      
+      setTimeout(() => {
+        targetMarker.innerHTML = '<img src="img/star.png" width="40">';
+      }, 1100);
+    }
+
+    function removeLastStar() {
+      for (let i = scoreMarkers.length - 1; i >= 0; i--) {
+        const marker = scoreMarkers[i];
+        if (marker.innerHTML.trim() !== '') {
+          const img = marker.querySelector('img');
+          if (img) {
+            img.style.transition = 'opacity 0.3s ease-out';
+            img.style.opacity = '0';
+            setTimeout(() => {
+              marker.innerHTML = '';
+              img.style.opacity = '1';
+            }, 300);
+          }
+          break;
+        }
+      }
+    }
+
+    function resetGame() {
+      // RESET ALL GAME STATE
+      gameWon = false;
+      celebrationInProgress = false;
+      totalPoints = 0;
+      streak = 0;
+      
+      // UNHIDE HEADER
+      document.querySelector('.app-header').classList.remove('hidden');
+      
+      // UNHIDE SCORE HEADER
+      document.querySelector('#score-header').classList.remove('hidden');
+      
+      // UNHIDE CONTROLS
+      document.querySelector('.controls').classList.remove('hidden');
+      
+      // UNHIDE AUDIO CARDS
+      document.querySelector('#audio-cards').classList.remove('hidden');
+      
+      // UNHIDE NOUN IMAGE
+      document.querySelector('#noun-img-container').classList.remove('hidden');
+      
+      // RESET GAME CONTENT STYLES
+      document.querySelector('.game-content').classList.remove('celebration');
+      document.querySelector('#video-section').classList.remove('celebration');
+      document.querySelector('#prompt-video').classList.remove('celebration');
+      
+      // RESET VIDEO ELEMENT
+      const video = document.getElementById('prompt-video');
+      video.pause();
+      video.src = '';
+      video.currentTime = 0;
+      video.onended = null;
+      video.dataset.isCelebration = '';
+      
+      // RE-ENABLE BUTTONS
+      document.querySelectorAll('.audio-card button').forEach(btn => {
+        btn.disabled = false;
+        btn.style.cursor = 'pointer';
+      });
+      
+      // START NEW GAME
+      setupScoreHeader();
+      loadNewRound();
+    }
+
+    function playCelebration() {
+      // DOUBLE LOCK - Set both flags immediately
+      gameWon = true;
+      celebrationInProgress = true;
+      
+      // STOP CURRENT VIDEO IMMEDIATELY
+      const currentVideo = document.getElementById('prompt-video');
+      currentVideo.pause();
+      currentVideo.src = '';
+      currentVideo.currentTime = 0;
+      
+      // STOP ALL OTHER VIDEO/AUDIO ELEMENTS
+      document.querySelectorAll('video, audio').forEach(media => {
+        media.pause();
+        media.src = '';
+        media.currentTime = 0;
+      });
+      
+      // Hide all game elements except video container
+      document.querySelector('.app-header').classList.add('hidden');
+      document.querySelector('#score-header').classList.add('hidden');
+      document.querySelector('.controls').classList.add('hidden');
+      document.querySelector('#audio-cards').classList.add('hidden');
+      document.querySelector('#noun-img-container').classList.add('hidden');
+      
+      // Transform for celebration (keep same size)
+      document.querySelector('.game-content').classList.add('celebration');
+      document.querySelector('#video-section').classList.add('celebration');
+      document.querySelector('#prompt-video').classList.add('celebration');
+      
+      // Remove ALL event listeners from game elements
+      const nounImg = document.getElementById('noun-img');
+      nounImg.ondragover = null;
+      nounImg.ondrop = null;
+      
+      // Disable all audio buttons
+      document.querySelectorAll('.audio-card button').forEach(btn => {
+        btn.disabled = true;
+        btn.style.cursor = 'not-allowed';
+      });
+      
+      // WAIT LONGER TO ENSURE CLEAN STATE
+      setTimeout(() => {
+        const video = document.getElementById('prompt-video');
+        
+        // SET CELEBRATION FLAG BEFORE LOADING VIDEO
+        video.dataset.isCelebration = 'true';
+        
+        // CLEAR ALL LISTENERS
+        video.onplay = null;
+        video.onpause = null;
+        video.onended = null;
+        video.onerror = null;
+        
+        // SET CELEBRATION VIDEO
+        video.src = 'vid/greatjob.mp4';
+        video.loop = false;
+        
+        // ADD CELEBRATION END LISTENER - THEN RESET
+        video.addEventListener('ended', function celebrationEnd() {
+          if (video.dataset.isCelebration === 'true') {
+            video.removeEventListener('ended', celebrationEnd);
+            video.pause();
+            video.src = '';
+            // AUTO-RESET AFTER 2 SECONDS
+            setTimeout(() => {
+              resetGame();
+            }, 2000);
+          }
+        }, { once: true });
+        
+        video.play().catch(err => console.error('Celebration play error:', err));
+      }, 300);
+    }
+
+    function updateScoreHeader(isCorrect) {
+      // BLOCK ALL IF GAME OVER
+      if (gameWon || celebrationInProgress) return;
+      
+      if (isCorrect) {
+        streak++;
+        animateStarToProgressBar(streak - 1);
+        
+        if (streak === streakLength) {
+          totalPoints++;
+          updatePointsDisplay();
+          
+          if (totalPoints === pointsGoal) {
+            // TRIGGER CELEBRATION IMMEDIATELY
+            playCelebration();
+            return; // EXIT FUNCTION
+          } else {
+            streak = 0;
+            setTimeout(() => {
+              setupScoreHeader();
+            }, 1200);
+          }
+        }
+      } else {
+        if (streak > 0) {
+          removeLastStar();
+          streak--;
+        }
+      }
+    }
+
+    function updatePointsDisplay() {
+      const pointsCounter = document.getElementById('points-counter');
+      if (pointsCounter) {
+        pointsCounter.textContent = totalPoints;
+        pointsCounter.classList.remove('pulse');
+        void pointsCounter.offsetWidth;
+        pointsCounter.classList.add('pulse');
+      }
+    }
+
+    function loadNewRound() {
+      // BLOCK IF GAME OVER
+      if (gameWon || celebrationInProgress) return;
+      
+      const noun = nouns[Math.floor(Math.random() * nouns.length)];
+      document.getElementById('noun-img').src = noun.img;
+      document.getElementById('noun-img').setAttribute('data-noun', noun.name);
+      
+      const video = document.getElementById('prompt-video');
+      video.src = getNextWhatisthisVideo();
+      video.loop = false;
+      video.play();
+
+      let incorrect;
+      do {
+        incorrect = nouns[Math.floor(Math.random() * nouns.length)];
+      } while (incorrect.name === noun.name);
+
+      let audioCards = [
+        { name: noun.name, audio: noun.audio, correct: true },
+        { name: incorrect.name, audio: incorrect.audio, correct: false }
+      ];
+      audioCards.sort(() => Math.random() - 0.5);
+
+      const audioCardsDiv = document.getElementById('audio-cards');
+      audioCardsDiv.innerHTML = '';
+      audioCards.forEach((card) => {
+        const div = document.createElement('div');
+        div.className = 'audio-card';
+        div.setAttribute('draggable', true);
+        div.setAttribute('data-correct', card.correct);
+        div.innerHTML = `<span>${card.name}</span><button onclick="event.stopPropagation(); playAudio('${card.audio}')">🔈</button>`;
+        
+        div.addEventListener('dragstart', function(e){
+          // BLOCK DRAG IF GAME OVER
+          if (gameWon || celebrationInProgress) {
+            e.preventDefault();
+            return;
+          }
+          e.dataTransfer.setData('text/plain', card.correct);
+          div.classList.add('dragging');
+        });
+        
+        div.addEventListener('dragend', function(e){
+          div.classList.remove('dragging');
+        });
+        
+        audioCardsDiv.appendChild(div);
+      });
+
+      let nounImg = document.getElementById('noun-img');
+      nounImg.ondragover = e => e.preventDefault();
+      nounImg.ondrop = function(e){
+        e.preventDefault();
+        // BLOCK DROP IF GAME OVER
+        if (gameWon || celebrationInProgress) return;
+        
+        const correct = (e.dataTransfer.getData('text/plain') === 'true');
+        if (correct) {
+          playFeedback(true);
+        } else {
+          updateScoreHeader(false);
+          playFeedback(false);
+        }
+      };
+    }
+
+    function playAudio(audioPath) {
+      // BLOCK AUDIO IF GAME OVER
+      if (gameWon || celebrationInProgress) return;
+      
+      const audio = new Audio(audioPath);
+      audio.play();
+    }
+
+    function playPromptVideo() {
+      // BLOCK REPLAY IF GAME OVER
+      if (gameWon || celebrationInProgress) return;
+      
+      const vid = document.getElementById('prompt-video');
+      vid.currentTime = 0;
+      vid.play();
+    }
+
+    function playFeedback(isCorrect) {
+      // BLOCK FEEDBACK IF GAME OVER
+      if (gameWon || celebrationInProgress) return;
+      
+      const promptVideo = document.getElementById('prompt-video');
+      promptVideo.src = isCorrect ? 'vid/thatscorrect.mp4' : 'vid/betterluck.mp4';
+      promptVideo.loop = false;
+      
+      promptVideo.onended = null;
+      
+      promptVideo.onended = function() {
+        // DOUBLE CHECK BEFORE LOADING NEW ROUND
+        if (!gameWon && !celebrationInProgress) {
+          promptVideo.onended = null;
+          if (isCorrect) {
+            updateScoreHeader(true);
+          }
+          setTimeout(loadNewRound, 500);
+        }
+      };
+      
+      promptVideo.play().catch(err => console.log('Playback error:', err));
+    }
+
+    setupScoreHeader();
+    loadNewRound();
   </script>
 </body>
 </html>
